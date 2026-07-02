@@ -44,6 +44,55 @@ class ADC16Adapter:
         return int(self.adc.read() * 65535 / 4095)
 
 
+class CircuitPythonI2CAdapter:
+    """Gives machine.I2C the small CircuitPython API expected by BusDevice."""
+
+    def __init__(self, i2c):
+        self.i2c = i2c
+
+    def try_lock(self):
+        return True
+
+    def unlock(self):
+        pass
+
+    def writeto(self, address, buffer, *, start=0, end=None):
+        if end is None:
+            end = len(buffer)
+        self.i2c.writeto(address, buffer[start:end])
+
+    def readfrom_into(self, address, buffer, *, start=0, end=None):
+        if end is None:
+            end = len(buffer)
+
+        if start == 0 and end == len(buffer):
+            self.i2c.readfrom_into(address, buffer)
+            return
+
+        read_buffer = bytearray(end - start)
+        self.i2c.readfrom_into(address, read_buffer)
+        buffer[start:end] = read_buffer
+
+    def writeto_then_readfrom(
+        self,
+        address,
+        out_buffer,
+        in_buffer,
+        *,
+        out_start=0,
+        out_end=None,
+        in_start=0,
+        in_end=None
+    ):
+        if out_end is None:
+            out_end = len(out_buffer)
+        if in_end is None:
+            in_end = len(in_buffer)
+
+        self.writeto(address, out_buffer, start=out_start, end=out_end)
+        self.readfrom_into(address, in_buffer, start=in_start, end=in_end)
+
+
 heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
 heater.value(0)
 
@@ -52,7 +101,7 @@ sht_i2c = machine.I2C(
     scl=machine.Pin(I2C_SCL_PIN),
     sda=machine.Pin(I2C_SDA_PIN),
 )
-sht_sensor = SHT4x(sht_i2c)
+sht_sensor = SHT4x(CircuitPythonI2CAdapter(sht_i2c))
 sht_sensor.mode = Mode.NOHEAT_HIGHPRECISION
 
 thermistor_adc = machine.ADC(machine.Pin(THERMISTOR_PIN))
