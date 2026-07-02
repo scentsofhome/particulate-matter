@@ -15,14 +15,16 @@
             --surface: rgba(255, 255, 255, 0.62);
             --surface-strong: rgba(255, 255, 255, 0.78);
             --surface-muted: rgba(255, 255, 255, 0.36);
-            --line: rgba(55, 68, 82, 0.14);
-            --line-strong: rgba(55, 68, 82, 0.22);
+            --line: rgba(55, 68, 82, 0.10);
+            --line-strong: rgba(55, 68, 82, 0.16);
             --text: #142022;
             --muted: rgba(20, 32, 34, 0.58);
             --quiet: rgba(20, 32, 34, 0.42);
             --accent: #2a9d8f;
             --accent-soft: rgba(42, 157, 143, 0.14);
             --accent-glass: rgba(42, 157, 143, 0.28);
+            --system-blue: #007aff;
+            --system-green: #34c759;
             --warning: #b7791f;
             --danger: #ad4f6b;
             --shadow: 0 24px 78px rgba(47, 63, 76, 0.18);
@@ -96,6 +98,16 @@
             align-items: center;
             gap: 20px;
             margin-bottom: 26px;
+            min-height: 58px;
+            padding: 9px 11px 9px 13px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.42);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.26)),
+                rgba(255,255,255,0.32);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.84), 0 12px 40px rgba(47, 63, 76, 0.10);
+            backdrop-filter: blur(26px) saturate(180%);
+            -webkit-backdrop-filter: blur(26px) saturate(180%);
         }
 
         .brand-lockup {
@@ -106,9 +118,9 @@
         }
 
         .brand-mark {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
             background:
                 linear-gradient(145deg, rgba(255,255,255,0.94), rgba(255,255,255,0.22)),
                 conic-gradient(from 210deg at 52% 48%, var(--accent), rgba(255,255,255,0.82), var(--accent-glass), var(--accent));
@@ -118,7 +130,7 @@
 
         .brand-title {
             font-size: 1rem;
-            font-weight: 650;
+            font-weight: 720;
             letter-spacing: 0;
             white-space: nowrap;
             overflow: hidden;
@@ -127,7 +139,7 @@
 
         .brand-subtitle {
             color: var(--muted);
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             margin-top: 2px;
         }
 
@@ -157,6 +169,13 @@
             white-space: nowrap;
         }
 
+        .status-pill.live {
+            color: color-mix(in srgb, var(--accent) 68%, #102124);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.44)),
+                var(--accent-soft);
+        }
+
         .status-dot {
             width: 8px;
             height: 8px;
@@ -168,6 +187,12 @@
         .status-pill.live .status-dot {
             background: var(--accent);
             box-shadow: 0 0 0 4px var(--accent-soft);
+            animation: livePulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px var(--accent-soft); }
+            50% { transform: scale(0.82); box-shadow: 0 0 0 7px rgba(42, 157, 143, 0.08); }
         }
 
         input {
@@ -198,22 +223,34 @@
         .btn-small, .export-btn {
             height: 38px;
             border: 0;
-            border-radius: 8px;
-            padding: 0 15px;
+            border-radius: 999px;
+            padding: 0 16px;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.16), transparent),
-                #11181a;
+                linear-gradient(180deg, rgba(255,255,255,0.26), transparent),
+                var(--system-blue);
             color: #fff;
             font-size: 0.92rem;
             font-weight: 680;
             cursor: pointer;
-            box-shadow: 0 14px 28px rgba(17, 24, 26, 0.16);
+            box-shadow: 0 14px 28px rgba(0, 122, 255, 0.22), inset 0 1px 0 rgba(255,255,255,0.28);
             transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .export-btn svg {
+            width: 15px;
+            height: 15px;
         }
 
         .btn-small:hover, .export-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 18px 34px rgba(17, 24, 26, 0.18);
+            box-shadow: 0 18px 34px rgba(0, 122, 255, 0.26), inset 0 1px 0 rgba(255,255,255,0.32);
         }
 
         .btn-small:active, .export-btn:active { transform: translateY(0); }
@@ -229,7 +266,7 @@
         .panel {
             position: relative;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 18px;
             border: 1px solid var(--line);
             border-top-color: rgba(255, 255, 255, 0.72);
             background:
@@ -268,7 +305,7 @@
 
         .hero-panel {
             min-height: 390px;
-            padding: 26px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -287,7 +324,7 @@
 
         .hero-title {
             margin: 9px 0 0;
-            font-size: 1.08rem;
+            font-size: 1.16rem;
             line-height: 1.2;
             font-weight: 680;
         }
@@ -296,14 +333,14 @@
             display: flex;
             align-items: baseline;
             gap: 8px;
-            margin: 34px 0 10px;
+            margin: 38px 0 12px;
             color: var(--text);
             line-height: 0.9;
         }
 
         #val-pm25 {
-            font-size: 5.2rem;
-            font-weight: 260;
+            font-size: clamp(4.8rem, 8.2vw, 6.6rem);
+            font-weight: 760;
             letter-spacing: 0;
             font-variant-numeric: tabular-nums;
             background: linear-gradient(180deg, #071012, color-mix(in srgb, var(--accent) 36%, #102124));
@@ -314,8 +351,8 @@
 
         .hero-unit {
             color: var(--muted);
-            font-size: 1.05rem;
-            font-weight: 620;
+            font-size: 1.08rem;
+            font-weight: 560;
             white-space: nowrap;
         }
 
@@ -333,19 +370,18 @@
         .hero-stats {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--line);
+            gap: 12px;
         }
 
         .hero-stat {
             min-width: 0;
-            padding: 14px;
+            padding: 15px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.42);
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.34)),
-                rgba(255,255,255,0.42);
+                linear-gradient(180deg, rgba(255,255,255,0.64), rgba(255,255,255,0.28)),
+                rgba(255,255,255,0.34);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
         }
 
         .hero-stat-label {
@@ -374,7 +410,7 @@
 
         .chart-panel {
             min-height: 390px;
-            padding: 22px 22px 18px;
+            padding: 24px 24px 20px;
             display: flex;
             flex-direction: column;
             overflow: visible;
@@ -409,7 +445,7 @@
             min-height: 290px;
             width: 100%;
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 14px;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.16)),
                 rgba(255,255,255,0.18);
@@ -428,7 +464,7 @@
             width: 36px;
             height: 36px;
             border: 1px solid var(--line);
-            border-radius: 8px;
+            border-radius: 12px;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.34)),
                 var(--surface-muted);
@@ -457,7 +493,7 @@
             display: none;
             min-width: 208px;
             padding: 7px;
-            border-radius: 8px;
+            border-radius: 14px;
             background:
                 linear-gradient(180deg, rgba(45, 55, 58, 0.96), rgba(18, 25, 27, 0.92));
             color: #fff;
@@ -476,7 +512,7 @@
             align-items: center;
             gap: 10px;
             padding: 9px 10px;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
             color: rgba(255,255,255,0.74);
             font-size: 0.88rem;
@@ -502,12 +538,8 @@
 
         .metric-list {
             display: grid;
-            gap: 1px;
+            gap: 10px;
             margin-top: 14px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--line);
         }
 
         .metric-row {
@@ -516,10 +548,13 @@
             align-items: baseline;
             gap: 14px;
             min-height: 50px;
-            padding: 12px 13px;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.42);
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.56), rgba(255,255,255,0.34)),
                 rgba(255, 255, 255, 0.42);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.68);
         }
 
         .metric-label {
@@ -550,20 +585,19 @@
         .plantower-raw {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 1px;
+            gap: 10px;
             margin-top: 14px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--line);
         }
 
         .raw-cell {
             min-width: 0;
             padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.42);
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.56), rgba(255,255,255,0.34)),
                 rgba(255, 255, 255, 0.42);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.68);
         }
 
         .raw-label {
@@ -593,7 +627,7 @@
             padding: 8px;
             max-width: calc(100% - 24px);
             border: 1px solid var(--line);
-            border-radius: 12px;
+            border-radius: 999px;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.84), rgba(248,250,248,0.6)),
                 rgba(248, 250, 248, 0.72);
@@ -606,9 +640,9 @@
         .segment-group {
             display: grid;
             grid-template-columns: repeat(2, minmax(88px, 1fr));
-            gap: 3px;
-            padding: 3px;
-            border-radius: 9px;
+            gap: 2px;
+            padding: 4px;
+            border-radius: 999px;
             background:
                 linear-gradient(180deg, rgba(20,32,34,0.08), rgba(20,32,34,0.04)),
                 rgba(20, 32, 34, 0.08);
@@ -620,7 +654,7 @@
         .segment-btn {
             height: 34px;
             border: 0;
-            border-radius: 7px;
+            border-radius: 999px;
             background: transparent;
             color: var(--muted);
             padding: 0 13px;
@@ -632,25 +666,25 @@
         }
 
         .segment-btn.active {
-            background: rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.86);
             color: var(--text);
-            box-shadow: var(--inner), 0 8px 18px rgba(47, 63, 76, 0.12);
+            box-shadow: var(--inner), 0 7px 16px rgba(47, 63, 76, 0.14);
         }
 
         .heater-off #btn-off,
         #heater-group:not(.heater-off) #btn-on,
         .mode-manual #btn-manual,
         #mode-group:not(.mode-manual) #btn-auto {
-            background: rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.86);
             color: var(--text);
-            box-shadow: var(--inner), 0 8px 18px rgba(47, 63, 76, 0.12);
+            box-shadow: var(--inner), 0 7px 16px rgba(47, 63, 76, 0.14);
         }
 
         .export-btn {
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.26), transparent),
-                var(--accent);
-            box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
+                var(--system-green);
+            box-shadow: 0 14px 28px rgba(52, 199, 89, 0.24), inset 0 1px 0 rgba(255,255,255,0.30);
         }
 
         @media (max-width: 980px) {
@@ -854,7 +888,10 @@
             <button class="segment-btn active" id="btn-off" onclick="setHeater('low')">Off</button>
         </div>
 
-        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+        <button class="export-btn" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            Export CSV
+        </button>
     </div>
 
     <script>
@@ -972,26 +1009,30 @@
             chartCtx.fillText(telemetryChart.data.labels[telemetryChart.data.labels.length - 1] || '', width - padding.right, height - 8);
 
             visibleDatasets.forEach(ds => {
+                const points = chartPoints(ds, xFor, yFor);
+                if (!points.length) return;
+
+                if (ds.label === 'PM 2.5') {
+                    const fill = chartCtx.createLinearGradient(0, padding.top, 0, padding.top + plotH);
+                    fill.addColorStop(0, colorWithAlpha(ds.borderColor, 0.18));
+                    fill.addColorStop(0.55, colorWithAlpha(ds.borderColor, 0.06));
+                    fill.addColorStop(1, colorWithAlpha(ds.borderColor, 0));
+
+                    chartCtx.beginPath();
+                    drawSmoothPath(points);
+                    chartCtx.lineTo(points[points.length - 1].x, padding.top + plotH);
+                    chartCtx.lineTo(points[0].x, padding.top + plotH);
+                    chartCtx.closePath();
+                    chartCtx.fillStyle = fill;
+                    chartCtx.fill();
+                }
+
                 chartCtx.strokeStyle = ds.borderColor;
-                chartCtx.lineWidth = 2.4;
+                chartCtx.lineWidth = ds.label === 'PM 2.5' ? 3 : 2.35;
+                chartCtx.lineCap = 'round';
+                chartCtx.lineJoin = 'round';
                 chartCtx.beginPath();
-                let drawing = false;
-
-                ds.data.forEach((value, index) => {
-                    if (!Number.isFinite(value)) {
-                        drawing = false;
-                        return;
-                    }
-                    const x = xFor(index);
-                    const y = yFor(value);
-                    if (!drawing) {
-                        chartCtx.moveTo(x, y);
-                        drawing = true;
-                    } else {
-                        chartCtx.lineTo(x, y);
-                    }
-                });
-
+                drawSmoothPath(points);
                 chartCtx.stroke();
             });
 
@@ -1009,17 +1050,46 @@
             });
         }
 
+        function chartPoints(dataset, xFor, yFor) {
+            return dataset.data
+                .map((value, index) => Number.isFinite(value) ? { x: xFor(index), y: yFor(value) } : null)
+                .filter(Boolean);
+        }
+
+        function drawSmoothPath(points) {
+            if (!points.length) return;
+            chartCtx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 1; i < points.length; i++) {
+                const previous = points[i - 1];
+                const current = points[i];
+                const midX = (previous.x + current.x) / 2;
+                chartCtx.quadraticCurveTo(previous.x, previous.y, midX, (previous.y + current.y) / 2);
+                chartCtx.quadraticCurveTo(current.x, current.y, current.x, current.y);
+            }
+        }
+
+        function colorWithAlpha(hex, alpha) {
+            const value = hex.replace('#', '');
+            const r = parseInt(value.slice(0, 2), 16);
+            const g = parseInt(value.slice(2, 4), 16);
+            const b = parseInt(value.slice(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
         function drawGrid(padding, plotW, plotH, width, min, max) {
-            chartCtx.strokeStyle = 'rgba(20, 32, 34, 0.11)';
-            chartCtx.fillStyle = 'rgba(20, 32, 34, 0.54)';
+            chartCtx.strokeStyle = 'rgba(20, 32, 34, 0.065)';
+            chartCtx.fillStyle = 'rgba(20, 32, 34, 0.46)';
             chartCtx.textAlign = 'right';
             chartCtx.textBaseline = 'middle';
             for (let i = 0; i <= 4; i++) {
                 const y = padding.top + (plotH * i / 4);
                 chartCtx.beginPath();
+                chartCtx.setLineDash(i === 0 || i === 4 ? [] : [4, 7]);
                 chartCtx.moveTo(padding.left, y);
                 chartCtx.lineTo(width - padding.right, y);
                 chartCtx.stroke();
+                chartCtx.setLineDash([]);
                 if (Number.isFinite(min) && Number.isFinite(max)) {
                     const value = max - ((max - min) * i / 4);
                     chartCtx.fillText(formatDisplay(value, 1), padding.left - 8, y);
