@@ -1,11 +1,14 @@
-# SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
+# -------- Important Copyright Information --------- #
 
-"""
-`adafruit_bus_device.i2c_device` - I2C Bus Device
-====================================================
-"""
+# FROM: GitHub
+# AUTHOR: Scott Shawcroft for Adafruit Industries
+# URL: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice/blob/main/adafruit_bus_device/i2c_device.py
+# LICENSE: The following code is used under the MIT License.
+# FULL LICENSE TEXT: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice/blob/main/LICENSE
+
+# Copyright (c) 2016 Adafruit Industries
+
+# -------------------------------------------------- #
 
 import time
 
