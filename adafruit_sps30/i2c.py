@@ -1,32 +1,14 @@
-# SPDX-FileCopyrightText: 2021 Kevin J. Walters
-#
-# SPDX-License-Identifier: MIT
-"""
-`adafruit_sps30.i2c`
-================================================================================
+# -------- Important Copyright Information --------- #
 
-Helper library for the Sensirion SPS30 particulate matter sensor using i2c interface.
+# FROM: GitHub
+# AUTHOR: Kevin J. Walters  (https://github.com/kevinjwalters)
+# URL: https://github.com/kevinjwalters/Adafruit_CircuitPython_SPS30/blob/master/adafruit_sps30/i2c.py
+# LICENSE: The following code is used under the MIT License.
+# FULL LICENSE TEXT: https://github.com/kevinjwalters/Adafruit_CircuitPython_SPS30/blob/master/LICENSE
 
+# Copyright (c) 2021 Kevin J. Walters
 
-* Author(s): Kevin J. Walters
-
-Implementation Notes
---------------------
-
-**Hardware:**
-
-* `Sensirion SPS30
-   <https://www.sensirion.com/en/environmental-sensors/particulate-matter-sensors-pm25/>`_
-
-**Software and Dependencies:**
-
-* Adafruit CircuitPython firmware for the supported boards:
-  https://github.com/adafruit/circuitpython/releases
-
-
- * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
- * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
-"""
+# -------------------------------------------------- #
 
 import time
 from struct import unpack_from
