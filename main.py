@@ -1,22 +1,23 @@
-import dht
 import machine
 import sys
 import time
 import uselect
 
+from adafruit_sht4x import Mode, SHT4x
 from pms5003 import PMS5003
 from thermistor import Thermistor
 
 
 # Pins and sensor settings
 HEATER_PIN = 25
-DHT_PIN = 27
+I2C_SCL_PIN = 22
+I2C_SDA_PIN = 21
 THERMISTOR_PIN = 34
 PMS_UART_ID = 2
 PMS_TX_PIN = 17
 PMS_RX_PIN = 16
 
-DHT_HUMIDITY_TRIGGER = 40
+SHT_HUMIDITY_TRIGGER = 40
 THERMISTOR_CUTOFF_C = 45.0
 HEATER_ON_MS = 5_000
 HEATER_COOLDOWN_MS = 35_000
@@ -46,7 +47,13 @@ class ADC16Adapter:
 heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
 heater.value(0)
 
-dht_sensor = dht.DHT22(machine.Pin(DHT_PIN))
+sht_i2c = machine.I2C(
+    0,
+    scl=machine.Pin(I2C_SCL_PIN),
+    sda=machine.Pin(I2C_SDA_PIN),
+)
+sht_sensor = SHT4x(sht_i2c)
+sht_sensor.mode = Mode.NOHEAT_HIGHPRECISION
 
 thermistor_adc = machine.ADC(machine.Pin(THERMISTOR_PIN))
 thermistor_adc.atten(machine.ADC.ATTN_11DB)
@@ -138,10 +145,9 @@ def update_cooldown(now):
         cooldown_active = False
 
 
-def read_dht():
+def read_sht41():
     try:
-        dht_sensor.measure()
-        return dht_sensor.temperature(), dht_sensor.humidity()
+        return sht_sensor.measurements
     except Exception:
         return "Err", "Err"
 
@@ -182,11 +188,11 @@ def read_particulate_matter():
     return last_pm
 
 
-def should_heat(dht_humidity, thermistor_c):
+def should_heat(sht_humidity, thermistor_c):
     if mode == MODE_MANUAL:
         target = heater_is_on
     else:
-        target = dht_humidity != "Err" and dht_humidity > DHT_HUMIDITY_TRIGGER
+        target = sht_humidity != "Err" and sht_humidity > SHT_HUMIDITY_TRIGGER
 
     if thermistor_c >= THERMISTOR_CUTOFF_C:
         target = False
@@ -204,13 +210,13 @@ def heater_status():
     return "OFF"
 
 
-def print_data(dht_temp, dht_humidity, thermistor_c, pm):
+def print_data(sht_temp, sht_humidity, thermistor_c, pm):
     print(
         "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
             mode,
             heater_status(),
-            dht_temp,
-            dht_humidity,
+            sht_temp,
+            sht_humidity,
             round(thermistor_c, 1),
             pm["pm1"],
             pm["pm25"],
@@ -237,11 +243,11 @@ while True:
     if time.ticks_diff(now, last_read_at) >= READ_INTERVAL_MS:
         last_read_at = now
 
-        dht_temp, dht_humidity = read_dht()
+        sht_temp, sht_humidity = read_sht41()
         thermistor_c = read_thermistor_c()
         pm = read_particulate_matter()
 
-        set_heater(should_heat(dht_humidity, thermistor_c), now)
-        print_data(dht_temp, dht_humidity, thermistor_c, pm)
+        set_heater(should_heat(sht_humidity, thermistor_c), now)
+        print_data(sht_temp, sht_humidity, thermistor_c, pm)
 
     time.sleep(0.1)
