@@ -1,32 +1,14 @@
-# SPDX-FileCopyrightText: 2017 Scott Shawcroft, written for Adafruit Industries
-# SPDX-FileCopyrightText: Copyright (c) 2021 ladyada for Adafruit
-#
-# SPDX-License-Identifier: MIT
-"""
-`adafruit_sht4x`
-================================================================================
+# -------- Important Copyright Information --------- #
 
-Python library for Sensirion SHT4x temperature and humidity sensors
+# FROM: GitHub
+# AUTHOR: Scott Shawcroft, written for Adafruit Industries
+# URL: https://github.com/adafruit/Adafruit_CircuitPython_SHT4x
+# LICENSE: The following code is used under the MIT License.
+# FULL LICENSE TEXT: https://github.com/adafruit/Adafruit_CircuitPython_SHT4x/blob/main/LICENSES/CC-BY-4.0.txt
 
-* Author(s): ladyada
+# Copyright (c) 2021 ladyada for Adafruit
 
-Implementation Notes
---------------------
-
-**Hardware:**
-
-* `Adafruit SHT40 Temperature & Humidity Sensor
-  <https://www.adafruit.com/product/4885>`_ (Product ID: 4885)
-
-**Software and Dependencies:**
-
-* Adafruit CircuitPython firmware for the supported boards:
-  https://circuitpython.org/downloads
-
-* Adafruit's Bus Device library:
-  https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-
-"""
+# -------------------------------------------------- #
 
 import struct
 import time
