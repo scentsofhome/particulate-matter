@@ -190,6 +190,7 @@ last_sensirion_pm = {
 }
 last_plantower_pm = dict(last_sensirion_pm)
 last_thermistor_c = 0.0
+sps30_error_count = 0
 
 
 def set_heater(enabled, now=None):
@@ -261,16 +262,14 @@ def read_thermistor_c():
 
 
 def read_sensirion_pm():
-    global last_sensirion_pm
+    global last_sensirion_pm, sps30_error_count
 
     if sps30_sensor is None:
         return last_sensirion_pm
 
     try:
-        if not sps30_sensor.data_available:
-            return last_sensirion_pm
-
         reading = sps30_sensor.read()
+        sps30_error_count = 0
         last_sensirion_pm = {
             "pm1": reading["pm10 standard"],
             "pm25": reading["pm25 standard"],
@@ -282,8 +281,10 @@ def read_sensirion_pm():
             "raw50": reading["particles 40um"],
             "raw100": reading["particles 100um"],
         }
-    except Exception:
-        pass
+    except Exception as error:
+        sps30_error_count += 1
+        if sps30_error_count in (1, 5, 15):
+            print("SPS30 read unavailable: {}".format(error))
 
     return last_sensirion_pm
 
