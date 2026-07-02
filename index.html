@@ -125,6 +125,7 @@
         .card-header svg { width: 14px; height: 14px; fill: currentColor; }
         .card-value { font-size: 2.2rem; font-weight: 400; letter-spacing: -0.02em; pointer-events: none; }
         .card-unit { font-size: 1rem; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+        .section-label { margin: 24px 0 12px 4px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 
         /* --- Chart & Dropdown Layers Menu --- */
         .chart-container { position: relative; height: 280px; width: 100%; margin-top: 15px; }
@@ -302,20 +303,62 @@
 
     <div class="data-grid" style="grid-template-columns: repeat(4, 1fr);">
         <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">PM 1.0</div>
+            <div class="card-header">SPS30 PM 1.0</div>
             <div class="card-value" style="font-size: 1.6rem;"><span id="val-pm1">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
         </div>
         <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">PM 10</div>
+            <div class="card-header">SPS30 PM 10</div>
             <div class="card-value" style="font-size: 1.6rem;"><span id="val-pm10">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
         </div>
         <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">> 0.3 µm</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r03">--</span><span class="card-unit" style="font-size: 0.8rem;">cnt/0.1L</span></div>
+            <div class="card-header">SPS30 > 0.5 µm</div>
+            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r03">--</span><span class="card-unit" style="font-size: 0.8rem;">#/cm³</span></div>
         </div>
         <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
+            <div class="card-header">SPS30 > 1.0 µm</div>
+            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r05">--</span><span class="card-unit" style="font-size: 0.8rem;">#/cm³</span></div>
+        </div>
+    </div>
+
+    <div class="section-label">Plantower PMS5003</div>
+    <div class="data-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
+            <div class="card-header">PM 1.0</div>
+            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm1">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
+            <div class="card-header">PM 2.5</div>
+            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm25">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
+            <div class="card-header">PM 10</div>
+            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm10">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
+        </div>
+    </div>
+    <div class="data-grid" style="grid-template-columns: repeat(6, 1fr);">
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
+            <div class="card-header">> 0.3 µm</div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r03">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
             <div class="card-header">> 0.5 µm</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r05">--</span><span class="card-unit" style="font-size: 0.8rem;">cnt/0.1L</span></div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r05">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
+            <div class="card-header">> 1.0 µm</div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r10">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
+            <div class="card-header">> 2.5 µm</div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r25">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
+            <div class="card-header">> 5.0 µm</div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r50">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
+        </div>
+        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
+            <div class="card-header">> 10 µm</div>
+            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r100">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
         </div>
     </div>
 
@@ -394,8 +437,8 @@
         { label: 'PM 1.0', borderColor: '#34c759', hidden: true },
         { label: 'PM 2.5', borderColor: '#30d158', hidden: false },
         { label: 'PM 10', borderColor: '#28a745', hidden: true },
-        { label: '>0.3µm', borderColor: '#bf5af2', hidden: false, yAxisID: 'y1' },
-        { label: '>0.5µm', borderColor: '#5e5ce6', hidden: true, yAxisID: 'y1' }
+        { label: 'SPS30 >0.5µm', borderColor: '#bf5af2', hidden: false, yAxisID: 'y1' },
+        { label: 'SPS30 >1.0µm', borderColor: '#5e5ce6', hidden: true, yAxisID: 'y1' }
     ];
 
     const telemetryChart = new Chart(ctx, {
@@ -458,7 +501,7 @@
 
     // --- WebREPL Logic & Logging ---
     let ws; let buffer = ""; let authenticated = false; let passwordSent = false;
-    let sessionData = [["Timestamp", "Mode", "Heater", "SHT41_Temp", "SHT41_Hum", "Thermistor", "PM1.0", "PM2.5", "PM10", "Raw0.3", "Raw0.5"]];
+    let sessionData = [["Timestamp", "Mode", "Heater", "SHT41_Temp", "SHT41_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
 
     function exportCSV() {
         if (sessionData.length <= 1) { alert("No data to export!"); return; }
@@ -519,11 +562,11 @@
 
     function parseData(dataStr) {
         let parts = dataStr.split(",");
-        if (parts.length < 10) return;
+        if (parts.length < 23) return;
 
         let now = new Date();
         let timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-        sessionData.push([timeString, ...parts.slice(0,10)]);
+        sessionData.push([timeString, ...parts]);
 
         if(parts[0] === "AUTOMATIC") setMode('auto'); else setMode('manual');
         if(parts[1] === "ON") setHeater('high'); else setHeater('low');
@@ -536,8 +579,17 @@
         document.getElementById('val-pm1').innerText = parts[5];
         document.getElementById('val-pm25').innerText = pm25Val;
         document.getElementById('val-pm10').innerText = parts[7];
-        document.getElementById('val-r03').innerText = parts[8];
-        document.getElementById('val-r05').innerText = parts[9];
+        document.getElementById('val-r03').innerText = parts[9];
+        document.getElementById('val-r05').innerText = parts[10];
+        document.getElementById('val-pt-pm1').innerText = parts[14];
+        document.getElementById('val-pt-pm25').innerText = parts[15];
+        document.getElementById('val-pt-pm10').innerText = parts[16];
+        document.getElementById('val-pt-r03').innerText = parts[17];
+        document.getElementById('val-pt-r05').innerText = parts[18];
+        document.getElementById('val-pt-r10').innerText = parts[19];
+        document.getElementById('val-pt-r25').innerText = parts[20];
+        document.getElementById('val-pt-r50').innerText = parts[21];
+        document.getElementById('val-pt-r100').innerText = parts[22];
 
         updateAtmosphere(pm25Val);
 
@@ -548,8 +600,8 @@
         telemetryChart.data.datasets[3].data.push(parseFloat(parts[5]));
         telemetryChart.data.datasets[4].data.push(pm25Val);
         telemetryChart.data.datasets[5].data.push(parseFloat(parts[7]));
-        telemetryChart.data.datasets[6].data.push(parseInt(parts[8]));
-        telemetryChart.data.datasets[7].data.push(parseInt(parts[9]));
+        telemetryChart.data.datasets[6].data.push(parseFloat(parts[9]));
+        telemetryChart.data.datasets[7].data.push(parseFloat(parts[10]));
 
         if (telemetryChart.data.labels.length > 45) {
             telemetryChart.data.labels.shift();

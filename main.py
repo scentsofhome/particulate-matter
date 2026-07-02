@@ -4,6 +4,7 @@ import time
 import uselect
 
 from adafruit_sht4x import Mode, SHT4x
+from adafruit_sps30.i2c import SPS30_I2C
 from pms5003 import PMS5003
 from thermistor import Thermistor
 
@@ -13,9 +14,9 @@ HEATER_PIN = 25
 I2C_SCL_PIN = 22
 I2C_SDA_PIN = 21
 THERMISTOR_PIN = 34
-PMS_UART_ID = 2
-PMS_TX_PIN = 17
-PMS_RX_PIN = 16
+PLANTOWER_UART_ID = 2
+PLANTOWER_TX_PIN = 17
+PLANTOWER_RX_PIN = 16
 
 SHT_HUMIDITY_TRIGGER = 40
 THERMISTOR_CUTOFF_C = 45.0
@@ -103,6 +104,22 @@ sht_i2c = machine.I2C(
 )
 sht_sensor = SHT4x(CircuitPythonI2CAdapter(sht_i2c))
 sht_sensor.mode = Mode.NOHEAT_HIGHPRECISION
+sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(sht_i2c))
+
+plantower_uart = machine.UART(
+    PLANTOWER_UART_ID,
+    9600,
+    tx=PLANTOWER_TX_PIN,
+    rx=PLANTOWER_RX_PIN,
+    timeout=1000,
+)
+plantower_sensor = PMS5003(
+    plantower_uart,
+    pin_reset=None,
+    pin_enable=None,
+    mode="active",
+    retries=3,
+)
 
 thermistor_adc = machine.ADC(machine.Pin(THERMISTOR_PIN))
 thermistor_adc.atten(machine.ADC.ATTN_11DB)
@@ -114,15 +131,6 @@ thermistor = Thermistor(
     THERMISTOR_RESISTOR,
 )
 
-pms_uart = machine.UART(
-    PMS_UART_ID,
-    9600,
-    tx=PMS_TX_PIN,
-    rx=PMS_RX_PIN,
-    timeout=1000,
-)
-pms_sensor = PMS5003(pms_uart, pin_reset=None, pin_enable=None, mode="active", retries=3)
-
 stdin_poll = uselect.poll()
 stdin_poll.register(sys.stdin, uselect.POLLIN)
 
@@ -133,7 +141,7 @@ cooldown_started_at = 0
 cooldown_active = False
 last_read_at = 0
 
-last_pm = {
+last_sensirion_pm = {
     "pm1": 0,
     "pm25": 0,
     "pm10": 0,
@@ -144,6 +152,7 @@ last_pm = {
     "raw50": 0,
     "raw100": 0,
 }
+last_plantower_pm = dict(last_sensirion_pm)
 last_thermistor_c = 0.0
 
 
@@ -212,15 +221,40 @@ def read_thermistor_c():
     return last_thermistor_c
 
 
-def read_particulate_matter():
-    global last_pm
+def read_sensirion_pm():
+    global last_sensirion_pm
 
     try:
-        if not pms_sensor.data_available():
-            return last_pm
+        if not sps30_sensor.data_available:
+            return last_sensirion_pm
 
-        reading = pms_sensor.read()
-        last_pm = {
+        reading = sps30_sensor.read()
+        last_sensirion_pm = {
+            "pm1": reading["pm10 standard"],
+            "pm25": reading["pm25 standard"],
+            "pm10": reading["pm100 standard"],
+            "raw03": 0,
+            "raw05": reading["particles 05um"],
+            "raw10": reading["particles 10um"],
+            "raw25": reading["particles 25um"],
+            "raw50": reading["particles 40um"],
+            "raw100": reading["particles 100um"],
+        }
+    except Exception:
+        pass
+
+    return last_sensirion_pm
+
+
+def read_plantower_pm():
+    global last_plantower_pm
+
+    try:
+        if not plantower_sensor.data_available():
+            return last_plantower_pm
+
+        reading = plantower_sensor.read()
+        last_plantower_pm = {
             "pm1": reading.pm_ug_per_m3(1.0),
             "pm25": reading.pm_ug_per_m3(2.5),
             "pm10": reading.pm_ug_per_m3(10),
@@ -234,7 +268,7 @@ def read_particulate_matter():
     except Exception:
         pass
 
-    return last_pm
+    return last_plantower_pm
 
 
 def should_heat(sht_humidity, thermistor_c):
@@ -259,23 +293,32 @@ def heater_status():
     return "OFF"
 
 
-def print_data(sht_temp, sht_humidity, thermistor_c, pm):
+def print_data(sht_temp, sht_humidity, thermistor_c, sensirion_pm, plantower_pm):
     print(
-        "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
+        "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
             mode,
             heater_status(),
             sht_temp,
             sht_humidity,
             round(thermistor_c, 1),
-            pm["pm1"],
-            pm["pm25"],
-            pm["pm10"],
-            pm["raw03"],
-            pm["raw05"],
-            pm["raw10"],
-            pm["raw25"],
-            pm["raw50"],
-            pm["raw100"],
+            sensirion_pm["pm1"],
+            sensirion_pm["pm25"],
+            sensirion_pm["pm10"],
+            sensirion_pm["raw03"],
+            sensirion_pm["raw05"],
+            sensirion_pm["raw10"],
+            sensirion_pm["raw25"],
+            sensirion_pm["raw50"],
+            sensirion_pm["raw100"],
+            plantower_pm["pm1"],
+            plantower_pm["pm25"],
+            plantower_pm["pm10"],
+            plantower_pm["raw03"],
+            plantower_pm["raw05"],
+            plantower_pm["raw10"],
+            plantower_pm["raw25"],
+            plantower_pm["raw50"],
+            plantower_pm["raw100"],
         )
     )
 
@@ -294,9 +337,10 @@ while True:
 
         sht_temp, sht_humidity = read_sht41()
         thermistor_c = read_thermistor_c()
-        pm = read_particulate_matter()
+        sensirion_pm = read_sensirion_pm()
+        plantower_pm = read_plantower_pm()
 
         set_heater(should_heat(sht_humidity, thermistor_c), now)
-        print_data(sht_temp, sht_humidity, thermistor_c, pm)
+        print_data(sht_temp, sht_humidity, thermistor_c, sensirion_pm, plantower_pm)
 
     time.sleep(0.1)
