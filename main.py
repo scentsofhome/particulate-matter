@@ -98,6 +98,17 @@ class CircuitPythonI2CAdapter:
         self.readfrom_into(address, in_buffer, start=in_start, end=in_end)
 
 
+class LenientSPS30_I2C(SPS30_I2C):
+    """Skips the nonessential firmware-version read if its CRC check fails."""
+
+    def read_firmware_version(self):
+        try:
+            return super().read_firmware_version()
+        except Exception as error:
+            print("SPS30 firmware version unavailable: {}".format(error))
+            return None
+
+
 ambient_i2c = machine.I2C(
     0,
     scl=machine.Pin(AMBIENT_I2C_SCL_PIN),
@@ -111,6 +122,7 @@ conditioned_i2c = machine.I2C(
 sps30_i2c = machine.SoftI2C(
     scl=machine.Pin(SPS30_I2C_SCL_PIN),
     sda=machine.Pin(SPS30_I2C_SDA_PIN),
+    freq=50_000,
 )
 
 
@@ -127,7 +139,7 @@ def init_sht41(i2c, name):
 
 def init_sps30(i2c):
     try:
-        sensor = SPS30_I2C(CircuitPythonI2CAdapter(i2c))
+        sensor = LenientSPS30_I2C(CircuitPythonI2CAdapter(i2c), mode_change_delay=2.0)
         print("SPS30 ready")
         return sensor
     except Exception as error:
