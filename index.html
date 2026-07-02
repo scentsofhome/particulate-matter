@@ -129,6 +129,7 @@
 
         /* --- Chart & Dropdown Layers Menu --- */
         .chart-container { position: relative; height: 280px; width: 100%; margin-top: 15px; }
+        #telemetryChart { width: 100%; height: 100%; display: block; }
         
         .layers-wrapper { position: relative; }
         .btn-icon-bare {
@@ -473,7 +474,8 @@
             }
         });
     } else {
-        document.getElementById('connection-status').innerText = "Chart missing, data cards ready";
+        const fallbackCanvas = document.getElementById('telemetryChart');
+        const fallbackCtx = fallbackCanvas.getContext('2d');
         telemetryChart = {
             data: {
                 labels: [],
@@ -490,8 +492,102 @@
             setDatasetVisibility(index, visible) {
                 this.data.datasets[index].hidden = !visible;
             },
-            update() {}
+            update() {
+                drawFallbackChart(fallbackCanvas, fallbackCtx, this.data.datasets);
+            }
         };
+        telemetryChart.update();
+    }
+
+    function drawFallbackChart(canvas, ctx, datasets) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const width = Math.max(1, Math.floor(rect.width));
+        const height = Math.max(1, Math.floor(rect.height));
+
+        if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+        }
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const padding = { top: 18, right: 16, bottom: 26, left: 38 };
+        const plotW = width - padding.left - padding.right;
+        const plotH = height - padding.top - padding.bottom;
+        const visibleDatasets = datasets.filter(ds => !ds.hidden && ds.data.some(v => Number.isFinite(v)));
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.68)';
+
+        for (let i = 0; i <= 4; i++) {
+            const y = padding.top + (plotH * i / 4);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+        }
+
+        if (!visibleDatasets.length) {
+            ctx.fillText('Waiting for telemetry...', padding.left, padding.top + 22);
+            return;
+        }
+
+        const values = visibleDatasets.flatMap(ds => ds.data.filter(v => Number.isFinite(v)));
+        let min = Math.min(...values);
+        let max = Math.max(...values);
+        if (min === max) {
+            min -= 1;
+            max += 1;
+        }
+
+        const range = max - min;
+        min -= range * 0.08;
+        max += range * 0.08;
+
+        const maxPoints = Math.max(...visibleDatasets.map(ds => ds.data.length), 2);
+        const xFor = index => padding.left + (plotW * index / Math.max(1, maxPoints - 1));
+        const yFor = value => padding.top + plotH - ((value - min) / (max - min)) * plotH;
+
+        ctx.fillText(formatDisplay(max, 1), 4, padding.top + 4);
+        ctx.fillText(formatDisplay(min, 1), 4, padding.top + plotH);
+
+        visibleDatasets.forEach(ds => {
+            ctx.strokeStyle = ds.borderColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            let drawing = false;
+
+            ds.data.forEach((value, index) => {
+                if (!Number.isFinite(value)) {
+                    drawing = false;
+                    return;
+                }
+
+                const x = xFor(index);
+                const y = yFor(value);
+                if (!drawing) {
+                    ctx.moveTo(x, y);
+                    drawing = true;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.stroke();
+        });
+
+        let legendX = padding.left;
+        visibleDatasets.slice(0, 4).forEach(ds => {
+            ctx.fillStyle = ds.borderColor;
+            ctx.fillRect(legendX, height - 14, 8, 8);
+            ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.fillText(ds.label, legendX + 12, height - 7);
+            legendX += Math.min(145, 28 + ds.label.length * 7);
+        });
     }
 
     // --- Layer Menu Logic ---
@@ -587,12 +683,38 @@
     }
 
     function updateAtmosphere(pm25) {
+        if (!Number.isFinite(pm25)) return;
+
         const body = document.body;
         const aqiText = document.getElementById('aqi-descriptor');
         body.classList.remove('theme-clear', 'theme-moderate', 'theme-unhealthy');
         if (pm25 <= 12) { body.classList.add('theme-clear'); aqiText.innerText = "Air Quality: Ideal"; } 
         else if (pm25 <= 35) { body.classList.add('theme-moderate'); aqiText.innerText = "Air Quality: Moderate Risk"; } 
         else { body.classList.add('theme-unhealthy'); aqiText.innerText = "Air Quality: High Risk"; }
+    }
+
+    function parseNumber(value) {
+        if (value === "Err") return null;
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function formatDisplay(value, decimals = 1) {
+        if (!Number.isFinite(value)) return "--";
+        return value.toFixed(decimals);
+    }
+
+    function formatCount(value) {
+        if (!Number.isFinite(value)) return "--";
+        return Math.round(value).toString();
+    }
+
+    function setFormattedValue(id, rawValue, decimals = 1) {
+        document.getElementById(id).innerText = formatDisplay(parseNumber(rawValue), decimals);
+    }
+
+    function setFormattedCount(id, rawValue) {
+        document.getElementById(id).innerText = formatCount(parseNumber(rawValue));
     }
 
     function parseData(dataStr) {
@@ -606,39 +728,39 @@
         if(parts[0] === "AUTOMATIC") setMode('auto'); else setMode('manual');
         if(parts[1] === "ON") setHeater('high'); else setHeater('low');
 
-        document.getElementById('val-ambt').innerText = parts[2] !== "Err" ? parts[2] : "--";
-        document.getElementById('val-ambh').innerText = parts[3] !== "Err" ? parts[3] : "--";
-        document.getElementById('val-dhtt').innerText = parts[4] !== "Err" ? parts[4] : "--";
-        document.getElementById('val-dhth').innerText = parts[5] !== "Err" ? parts[5] : "--";
-        document.getElementById('val-wall').innerText = parts[6];
+        setFormattedValue('val-ambt', parts[2], 1);
+        setFormattedValue('val-ambh', parts[3], 1);
+        setFormattedValue('val-dhtt', parts[4], 1);
+        setFormattedValue('val-dhth', parts[5], 1);
+        setFormattedValue('val-wall', parts[6], 1);
         
-        let pm25Val = parseFloat(parts[8]);
-        document.getElementById('val-pm1').innerText = parts[7];
-        document.getElementById('val-pm25').innerText = pm25Val;
-        document.getElementById('val-pm10').innerText = parts[9];
-        document.getElementById('val-r03').innerText = parts[11];
-        document.getElementById('val-r05').innerText = parts[12];
-        document.getElementById('val-pt-pm1').innerText = parts[16];
-        document.getElementById('val-pt-pm25').innerText = parts[17];
-        document.getElementById('val-pt-pm10').innerText = parts[18];
-        document.getElementById('val-pt-r03').innerText = parts[19];
-        document.getElementById('val-pt-r05').innerText = parts[20];
-        document.getElementById('val-pt-r10').innerText = parts[21];
-        document.getElementById('val-pt-r25').innerText = parts[22];
-        document.getElementById('val-pt-r50').innerText = parts[23];
-        document.getElementById('val-pt-r100').innerText = parts[24];
+        let pm25Val = parseNumber(parts[8]);
+        setFormattedValue('val-pm1', parts[7], 2);
+        setFormattedValue('val-pm25', parts[8], 2);
+        setFormattedValue('val-pm10', parts[9], 2);
+        setFormattedValue('val-r03', parts[11], 1);
+        setFormattedValue('val-r05', parts[12], 1);
+        setFormattedValue('val-pt-pm1', parts[16], 0);
+        setFormattedValue('val-pt-pm25', parts[17], 0);
+        setFormattedValue('val-pt-pm10', parts[18], 0);
+        setFormattedCount('val-pt-r03', parts[19]);
+        setFormattedCount('val-pt-r05', parts[20]);
+        setFormattedCount('val-pt-r10', parts[21]);
+        setFormattedCount('val-pt-r25', parts[22]);
+        setFormattedCount('val-pt-r50', parts[23]);
+        setFormattedCount('val-pt-r100', parts[24]);
 
         updateAtmosphere(pm25Val);
 
         telemetryChart.data.labels.push(timeString);
-        telemetryChart.data.datasets[0].data.push(parseFloat(parts[6]));
-        telemetryChart.data.datasets[1].data.push(parts[4] !== "Err" ? parseFloat(parts[4]) : null);
-        telemetryChart.data.datasets[2].data.push(parts[5] !== "Err" ? parseFloat(parts[5]) : null);
-        telemetryChart.data.datasets[3].data.push(parseFloat(parts[7]));
+        telemetryChart.data.datasets[0].data.push(parseNumber(parts[6]));
+        telemetryChart.data.datasets[1].data.push(parseNumber(parts[4]));
+        telemetryChart.data.datasets[2].data.push(parseNumber(parts[5]));
+        telemetryChart.data.datasets[3].data.push(parseNumber(parts[7]));
         telemetryChart.data.datasets[4].data.push(pm25Val);
-        telemetryChart.data.datasets[5].data.push(parseFloat(parts[9]));
-        telemetryChart.data.datasets[6].data.push(parseFloat(parts[11]));
-        telemetryChart.data.datasets[7].data.push(parseFloat(parts[12]));
+        telemetryChart.data.datasets[5].data.push(parseNumber(parts[9]));
+        telemetryChart.data.datasets[6].data.push(parseNumber(parts[11]));
+        telemetryChart.data.datasets[7].data.push(parseNumber(parts[12]));
 
         if (telemetryChart.data.labels.length > 45) {
             telemetryChart.data.labels.shift();
