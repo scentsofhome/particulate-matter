@@ -513,7 +513,7 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, width, height);
 
-        const padding = { top: 18, right: 16, bottom: 26, left: 38 };
+        const padding = { top: 18, right: 96, bottom: 34, left: 52 };
         const plotW = width - padding.left - padding.right;
         const plotH = height - padding.top - padding.bottom;
         const visibleDatasets = datasets.filter(ds => !ds.hidden && ds.data.some(v => Number.isFinite(v)));
@@ -523,15 +523,15 @@
         ctx.font = '11px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.68)';
 
-        for (let i = 0; i <= 4; i++) {
-            const y = padding.top + (plotH * i / 4);
-            ctx.beginPath();
-            ctx.moveTo(padding.left, y);
-            ctx.lineTo(width - padding.right, y);
-            ctx.stroke();
-        }
-
         if (!visibleDatasets.length) {
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (plotH * i / 4);
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+            }
+            ctx.textAlign = 'left';
             ctx.fillText('Waiting for telemetry...', padding.left, padding.top + 22);
             return;
         }
@@ -552,8 +552,27 @@
         const xFor = index => padding.left + (plotW * index / Math.max(1, maxPoints - 1));
         const yFor = value => padding.top + plotH - ((value - min) / (max - min)) * plotH;
 
-        ctx.fillText(formatDisplay(max, 1), 4, padding.top + 4);
-        ctx.fillText(formatDisplay(min, 1), 4, padding.top + plotH);
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 4; i++) {
+            const y = padding.top + (plotH * i / 4);
+            const value = max - ((max - min) * i / 4);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+            ctx.fillText(formatDisplay(value, 1), padding.left - 8, y);
+        }
+
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
+        ctx.fillText(telemetryChart.data.labels[0] || '', padding.left, height - 8);
+        ctx.textAlign = 'right';
+        ctx.fillText(
+            telemetryChart.data.labels[telemetryChart.data.labels.length - 1] || '',
+            width - padding.right,
+            height - 8
+        );
 
         visibleDatasets.forEach(ds => {
             ctx.strokeStyle = ds.borderColor;
@@ -580,11 +599,31 @@
             ctx.stroke();
         });
 
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+        visibleDatasets.slice(0, 5).forEach((ds, index) => {
+            const latest = [...ds.data].reverse().find(v => Number.isFinite(v));
+            if (!Number.isFinite(latest)) return;
+
+            const y = Math.min(
+                height - padding.bottom - 8,
+                Math.max(padding.top + 8, yFor(latest))
+            );
+            const labelY = y + index * 2;
+            ctx.fillStyle = ds.borderColor;
+            ctx.fillRect(width - padding.right + 10, labelY - 5, 8, 8);
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(formatDisplay(latest, 1), width - padding.right + 24, labelY);
+        });
+
         let legendX = padding.left;
         visibleDatasets.slice(0, 4).forEach(ds => {
             ctx.fillStyle = ds.borderColor;
             ctx.fillRect(legendX, height - 14, 8, 8);
             ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
             ctx.fillText(ds.label, legendX + 12, height - 7);
             legendX += Math.min(145, 28 + ds.label.length * 7);
         });
