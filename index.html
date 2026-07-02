@@ -4,479 +4,788 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Particulate Matter Monitoring Station</title>
-    <script src="chart.js"></script>
     <style>
         :root {
-            --bg-color: #5b8cd6;
-            --bg-glow: #9fc3f9;
-            --glass-bg: rgba(255, 255, 255, 0.12);
-            --glass-border: rgba(255, 255, 255, 0.25);
-            --glass-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 8px 24px rgba(0, 0, 0, 0.15);
-            --text-main: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.75);
-            --glow-color: rgba(255, 255, 255, 0.1);
+            --page-bg: #eef2f0;
+            --wash-one: rgba(143, 197, 190, 0.42);
+            --wash-two: rgba(219, 188, 151, 0.34);
+            --wash-three: rgba(127, 142, 166, 0.18);
+            --surface: rgba(255, 255, 255, 0.62);
+            --surface-strong: rgba(255, 255, 255, 0.78);
+            --surface-muted: rgba(255, 255, 255, 0.36);
+            --line: rgba(55, 68, 82, 0.14);
+            --line-strong: rgba(55, 68, 82, 0.22);
+            --text: #142022;
+            --muted: rgba(20, 32, 34, 0.58);
+            --quiet: rgba(20, 32, 34, 0.42);
+            --accent: #2a9d8f;
+            --accent-soft: rgba(42, 157, 143, 0.14);
+            --warning: #b7791f;
+            --danger: #ad4f6b;
+            --shadow: 0 22px 70px rgba(47, 63, 76, 0.16);
+            --inner: inset 0 1px 0 rgba(255, 255, 255, 0.86);
         }
 
-        body.theme-clear { --bg-color: #74a0db; --bg-glow: #9fc3f9; }
-        body.theme-moderate { --bg-color: #b5986c; --bg-glow: #e6cda6; }
-        body.theme-unhealthy { --bg-color: #8c6a7a; --bg-glow: #c99fb1; }
+        body.theme-clear {
+            --page-bg: #edf4f1;
+            --wash-one: rgba(119, 193, 184, 0.42);
+            --wash-two: rgba(195, 218, 202, 0.36);
+            --accent: #2a9d8f;
+            --accent-soft: rgba(42, 157, 143, 0.14);
+        }
+
+        body.theme-moderate {
+            --page-bg: #f4f0e9;
+            --wash-one: rgba(225, 186, 116, 0.42);
+            --wash-two: rgba(133, 176, 169, 0.28);
+            --accent: #b7791f;
+            --accent-soft: rgba(183, 121, 31, 0.14);
+        }
+
+        body.theme-unhealthy {
+            --page-bg: #f1ecef;
+            --wash-one: rgba(188, 108, 131, 0.36);
+            --wash-two: rgba(106, 126, 147, 0.24);
+            --accent: #ad4f6b;
+            --accent-soft: rgba(173, 79, 107, 0.14);
+        }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, transparent 60%);
-            background-attachment: fixed;
-            color: var(--text-main);
-            margin: 0;
-            padding: 40px 20px 120px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             min-height: 100vh;
-            transition: background-color 1.5s ease, background-image 1.5s ease;
+            margin: 0;
+            padding: 28px 24px 118px;
+            background:
+                radial-gradient(circle at 18% 0%, var(--wash-one), transparent 34rem),
+                radial-gradient(circle at 86% 8%, var(--wash-two), transparent 38rem),
+                linear-gradient(135deg, var(--page-bg), #f8faf8 48%, #e7ecee);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+            transition: background 900ms ease;
         }
 
-        .container { max-width: 900px; width: 100%; }
+        .app-shell {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+        }
 
-        /* --- Header & Typography --- */
-        .top-bar { display: flex; justify-content: flex-end; margin-bottom: 30px; gap: 10px; }
-        
+        .top-bar {
+            display: grid;
+            grid-template-columns: minmax(190px, 1fr) auto;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 26px;
+        }
+
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.28)),
+                radial-gradient(circle at 35% 28%, var(--accent), transparent 56%);
+            border: 1px solid var(--line);
+            box-shadow: var(--inner), 0 10px 24px rgba(47, 63, 76, 0.12);
+        }
+
+        .brand-title {
+            font-size: 1rem;
+            font-weight: 650;
+            letter-spacing: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-subtitle {
+            color: var(--muted);
+            font-size: 0.78rem;
+            margin-top: 2px;
+        }
+
+        .connection-strip {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            box-shadow: var(--inner);
+            font-size: 0.86rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9aa4a6;
+            box-shadow: 0 0 0 4px rgba(154, 164, 166, 0.12);
+        }
+
+        .status-pill.live .status-dot {
+            background: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
         input {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            padding: 10px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            width: 126px;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.58);
+            color: var(--text);
+            padding: 0 12px;
             outline: none;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            font-size: 0.92rem;
+            font-weight: 560;
+            box-shadow: var(--inner);
         }
-        input::placeholder { color: var(--text-muted); }
-        input:focus { border-color: rgba(255,255,255,0.6); }
 
-        .btn-small {
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--text-main);
-            border: 1px solid var(--glass-border);
-            padding: 10px 20px;
-            border-radius: 20px;
+        input[type="password"] { width: 106px; }
+        input::placeholder { color: var(--quiet); }
+        input:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+
+        button {
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-small, .export-btn {
+            height: 38px;
+            border: 0;
+            border-radius: 8px;
+            padding: 0 15px;
+            background: #11181a;
+            color: #fff;
+            font-size: 0.92rem;
+            font-weight: 680;
             cursor: pointer;
-            font-weight: 500;
-            backdrop-filter: blur(24px);
-            transition: all 0.3s cubic-bezier(0.25, 1.5, 0.5, 1);
+            box-shadow: 0 14px 28px rgba(17, 24, 26, 0.16);
+            transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
         }
-        .btn-small:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.04); }
-        .btn-small:active { transform: scale(0.95); }
 
-        .hero-section { text-align: center; margin: 10px 0 50px 0; }
-        .hero-title { font-size: 1.8rem; font-weight: 400; letter-spacing: 0.02em; margin: 0 0 10px 0; opacity: 0.9; }
-        .hero-value { 
-            font-size: 7rem; 
-            font-weight: 200; 
-            letter-spacing: -0.04em; 
-            display: flex; 
-            align-items: baseline; 
-            justify-content: center;
-            line-height: 1;
+        .btn-small:hover, .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(17, 24, 26, 0.18);
         }
-        .hero-unit { font-size: 2.2rem; font-weight: 300; letter-spacing: normal; margin-left: 6px; color: var(--text-muted); }
-        .hero-subtitle { font-size: 1.2rem; font-weight: 500; color: var(--text-main); margin-top: 5px; }
-        #aqi-descriptor { font-size: 1rem; color: var(--text-muted); margin-top: 5px; }
 
-        /* --- Glass Cards --- */
-        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 16px; }
-        
-        .glass-card {
+        .btn-small:active, .export-btn:active { transform: translateY(0); }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.45fr);
+            gap: 18px;
+            align-items: stretch;
+            margin-bottom: 18px;
+        }
+
+        .panel {
             position: relative;
             overflow: hidden;
-            background: var(--glass-bg);
-            backdrop-filter: blur(40px) saturate(160%);
-            -webkit-backdrop-filter: blur(40px) saturate(160%);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 18px 22px;
-            box-shadow: var(--glass-shadow);
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(180deg, var(--surface-strong), var(--surface)),
+                var(--surface);
+            box-shadow: var(--shadow), var(--inner);
+            backdrop-filter: blur(28px) saturate(160%);
+            -webkit-backdrop-filter: blur(28px) saturate(160%);
+        }
+
+        .panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.62), transparent 38%);
+            opacity: 0.62;
+        }
+
+        .panel > * { position: relative; z-index: 1; }
+
+        .hero-panel {
+            min-height: 390px;
+            padding: 26px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 100px;
         }
 
-        /* Kinetic Class for interactable cards only */
-        .kinetic {
-            cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-            transform-origin: center;
+        .eyebrow {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 760;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
-        .kinetic:hover { transform: scale(1.02) translateY(-2px); border-color: rgba(255,255,255,0.4); }
-        .kinetic:active { transform: scale(0.94) scaleX(1.04); box-shadow: inset 0 2px 8px rgba(0,0,0,0.1); }
-        
-        .kinetic::before {
-            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), var(--glow-color), transparent 40%);
-            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: -1;
+
+        .hero-title {
+            margin: 9px 0 0;
+            font-size: 1.08rem;
+            line-height: 1.2;
+            font-weight: 680;
         }
-        .kinetic:hover::before { opacity: 1; }
 
-        .card-header { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 8px; }
-        .card-header-left { display: flex; align-items: center; gap: 6px; }
-        .card-header svg { width: 14px; height: 14px; fill: currentColor; }
-        .card-value { font-size: 2.2rem; font-weight: 400; letter-spacing: -0.02em; pointer-events: none; }
-        .card-unit { font-size: 1rem; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
-        .section-label { margin: 24px 0 12px 4px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+        .hero-value {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin: 34px 0 10px;
+            color: var(--text);
+            line-height: 0.9;
+        }
 
-        /* --- Chart & Dropdown Layers Menu --- */
-        .chart-container { position: relative; height: 280px; width: 100%; margin-top: 15px; }
-        #telemetryChart { width: 100%; height: 100%; display: block; }
-        
+        #val-pm25 {
+            font-size: 5.2rem;
+            font-weight: 260;
+            letter-spacing: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-unit {
+            color: var(--muted);
+            font-size: 1.05rem;
+            font-weight: 620;
+            white-space: nowrap;
+        }
+
+        #aqi-descriptor {
+            display: inline-flex;
+            width: fit-content;
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: color-mix(in srgb, var(--accent) 74%, #0c1112);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--line);
+        }
+
+        .hero-stat {
+            min-width: 0;
+            padding: 14px;
+            background: rgba(255,255,255,0.42);
+        }
+
+        .hero-stat-label {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 760;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-stat-value {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 1.36rem;
+            font-weight: 560;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .unit {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 650;
+            white-space: nowrap;
+        }
+
+        .chart-panel {
+            min-height: 390px;
+            padding: 22px 22px 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 720;
+        }
+
+        .panel-subtitle {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 540;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            min-height: 290px;
+            width: 100%;
+        }
+
+        #telemetryChart {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .layers-wrapper { position: relative; }
+
         .btn-icon-bare {
-            background: transparent; border: none; color: var(--text-main); cursor: pointer;
-            padding: 4px; display: flex; align-items: center; justify-content: center;
-            opacity: 0.7; transition: opacity 0.2s;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface-muted);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            box-shadow: var(--inner);
         }
-        .btn-icon-bare:hover { opacity: 1; }
-        .btn-icon-bare svg { width: 22px; height: 22px; }
+
+        .btn-icon-bare svg {
+            width: 19px;
+            height: 19px;
+        }
 
         .dropdown-menu {
-            position: absolute; right: 0; top: 30px;
-            background: rgba(45, 45, 45, 0.85);
-            backdrop-filter: blur(40px) saturate(200%);
-            -webkit-backdrop-filter: blur(40px) saturate(200%);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 8px;
+            position: absolute;
+            right: 0;
+            top: 42px;
             display: none;
-            flex-direction: column;
-            min-width: 180px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 10;
-            text-transform: none; letter-spacing: normal;
-        }
-        .dropdown-menu.show { display: flex; }
-        
-        .dropdown-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 12px;
-            color: #fff; font-size: 1rem; font-weight: 400;
-            cursor: pointer;
+            min-width: 208px;
+            padding: 7px;
             border-radius: 8px;
-            transition: background 0.2s;
+            background: rgba(21, 29, 31, 0.9);
+            color: #fff;
+            box-shadow: 0 18px 48px rgba(15, 20, 22, 0.26);
+            z-index: 20;
         }
-        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
-        .dropdown-item .check { width: 14px; height: 14px; opacity: 0; }
-        .dropdown-item.active .check { opacity: 1; }
-        .dropdown-item .indicator { width: 10px; height: 10px; border-radius: 50%; }
 
-        /* --- Neumorphic Bottom Control Panel --- */
+        .dropdown-menu.show { display: block; }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.74);
+            font-size: 0.88rem;
+            font-weight: 590;
+        }
+
+        .dropdown-item:hover { background: rgba(255,255,255,0.08); }
+        .dropdown-item.active { color: #fff; }
+        .dropdown-item .check { width: 13px; height: 13px; opacity: 0; }
+        .dropdown-item.active .check { opacity: 1; }
+        .dropdown-item .indicator { width: 9px; height: 9px; border-radius: 50%; }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .metric-panel {
+            padding: 18px;
+        }
+
+        .metric-list {
+            display: grid;
+            gap: 1px;
+            margin-top: 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--line);
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: baseline;
+            gap: 14px;
+            min-height: 50px;
+            padding: 12px 13px;
+            background: rgba(255, 255, 255, 0.42);
+        }
+
+        .metric-label {
+            min-width: 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 650;
+        }
+
+        .metric-value {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            color: var(--text);
+            font-size: 1.18rem;
+            font-weight: 590;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .particle-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .plantower-raw {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1px;
+            margin-top: 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--line);
+        }
+
+        .raw-cell {
+            min-width: 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.42);
+        }
+
+        .raw-label {
+            color: var(--muted);
+            font-size: 0.74rem;
+            font-weight: 720;
+        }
+
+        .raw-value {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-top: 7px;
+            font-size: 1.08rem;
+            font-weight: 590;
+            font-variant-numeric: tabular-nums;
+        }
+
         .bottom-panel {
             position: fixed;
-            bottom: 30px;
             left: 50%;
+            bottom: 24px;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 999px;
-            padding: 8px;
             display: flex;
-            gap: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            max-width: calc(100% - 24px);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(248, 250, 248, 0.72);
+            box-shadow: 0 20px 54px rgba(47, 63, 76, 0.24), var(--inner);
+            backdrop-filter: blur(30px) saturate(170%);
+            -webkit-backdrop-filter: blur(30px) saturate(170%);
             z-index: 100;
         }
 
         .segment-group {
-            display: flex;
-            position: relative;
-            background: rgba(0, 0, 0, 0.25); /* Deep inner track */
-            border-radius: 999px;
-            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.1);
-            padding: 4px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(88px, 1fr));
+            gap: 3px;
+            padding: 3px;
+            border-radius: 9px;
+            background: rgba(20, 32, 34, 0.08);
         }
+
+        .segment-bg { display: none; }
 
         .segment-btn {
-            flex: 1; /* Forces buttons to split width perfectly 50/50 */
-            min-width: 110px;
-            text-align: center; /* Centers the text within the 50% flex space */
-            position: relative; z-index: 2;
-            background: transparent; border: none;
-            color: rgba(255, 255, 255, 0.5);
-            padding: 10px 0;
-            border-radius: 999px;
-            font-size: 0.95rem; font-weight: 600; letter-spacing: 0.02em;
+            height: 34px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            padding: 0 13px;
+            font-size: 0.9rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: color 0.4s ease, text-shadow 0.4s ease;
-        }
-        .segment-btn.active { color: #ffffff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
-
-        /* The Glossy Glass Pill */
-        .segment-bg {
-            position: absolute; top: 4px; bottom: 4px;
-            width: calc(50% - 4px);
-            border-radius: 999px; z-index: 1;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s ease, box-shadow 0.4s ease;
-            
-            /* Core Glass Effect - More Transparent */
-            backdrop-filter: blur(8px) saturate(140%);
-            -webkit-backdrop-filter: blur(8px) saturate(140%);
-            
-            /* The glossy physical lip and shadow */
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 
-                inset 0 4px 6px rgba(255, 255, 255, 0.3),   /* Top glare */
-                inset 0 -3px 4px rgba(0, 0, 0, 0.1),       /* Bottom inner curve */
-                0 4px 10px rgba(0, 0, 0, 0.15);            /* Outer drop shadow */
+            white-space: nowrap;
+            transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
         }
 
-        /* Group 1: Mode Colors (Translucent Blue) */
-        #mode-bg { 
-            background: rgba(94, 92, 230, 0.25); 
-            transform: translateX(0); 
-        }
-        .mode-manual #mode-bg { 
-            background: rgba(142, 142, 147, 0.2); /* Clear/Grey glass when inactive */
-            transform: translateX(100%); 
+        .segment-btn.active {
+            background: rgba(255,255,255,0.72);
+            color: var(--text);
+            box-shadow: var(--inner), 0 8px 18px rgba(47, 63, 76, 0.12);
         }
 
-        /* Group 2: Heater Colors (Translucent Green) */
-        #heater-bg { 
-            background: rgba(52, 199, 89, 0.25); 
-            transform: translateX(0); 
-        }
-        .heater-off #heater-bg { 
-            background: rgba(142, 142, 147, 0.2); 
-            transform: translateX(100%); 
+        .heater-off #btn-off,
+        #heater-group:not(.heater-off) #btn-on,
+        .mode-manual #btn-manual,
+        #mode-group:not(.mode-manual) #btn-auto {
+            background: rgba(255,255,255,0.72);
+            color: var(--text);
+            box-shadow: var(--inner), 0 8px 18px rgba(47, 63, 76, 0.12);
         }
 
         .export-btn {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            color: #fff;
-            padding: 0 24px; border-radius: 999px;
-            font-size: 0.95rem; font-weight: 600; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 1.5, 0.5, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            background: var(--accent);
+            box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
         }
-        .export-btn:hover { 
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(1.04);
-        }
-        .export-btn:active { transform: scale(0.95); }
 
+        @media (max-width: 980px) {
+            body { padding: 20px 14px 132px; }
+            .top-bar { grid-template-columns: 1fr; }
+            .connection-strip { justify-content: flex-start; }
+            .dashboard-grid, .section-grid, .particle-grid { grid-template-columns: 1fr; }
+            .hero-panel, .chart-panel { min-height: auto; }
+            .chart-container { height: 320px; }
+        }
+
+        @media (max-width: 640px) {
+            .brand-title { white-space: normal; }
+            .connection-strip { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+            .status-pill, .btn-small, input { width: 100%; }
+            input[type="password"] { width: 100%; }
+            #val-pm25 { font-size: 3.6rem; }
+            .hero-stats, .plantower-raw { grid-template-columns: 1fr; }
+            .bottom-panel {
+                left: 12px;
+                right: 12px;
+                transform: none;
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body class="theme-clear">
-
-<div class="container">
-    <div class="top-bar">
-        <span id="connection-status" style="margin-top: 10px; margin-right: auto; font-weight: 500;">Offline</span>
-        <input type="text" id="ipAddress" value="192.168.4.1" placeholder="IP" style="width: 110px;">
-        <input type="password" id="webReplPass" placeholder="Pass" style="width: 90px;">
-        <button id="connectBtn" class="btn-small" style="background: #fff; color: #000; border: none;">Connect</button>
-    </div>
-
-    <div class="hero-section">
-        <h1 class="hero-title">Particulate Matter Monitoring Station</h1>
-        <div class="hero-value"><span id="val-pm25">--</span><span class="hero-unit">µg/m³</span></div>
-        <div class="hero-subtitle">Live PM 2.5 Concentration</div>
-        <div id="aqi-descriptor">Awaiting System Data...</div>
-    </div>
-
-    <div class="data-grid">
-        <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 2c.6 0 1 .4 1 1v10.8c1.2.8 2 2.2 2 3.7 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-1.5.8-2.9 2-3.7V5c0-.6.4-1 1-1z"/></svg> Ambient Temp</div></div>
-            <div class="card-value"><span id="val-ambt">--</span><span class="card-unit">°C</span></div>
-        </div>
-        <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2.6c-4.3 4.8-8 9-8 13.4 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.4-3.7-8.6-8-13.4zm0 19.4c-3.3 0-6-2.7-6-6 0-3.5 3-7.2 6-11 3 3.8 6 7.5 6 11 0 3.3-2.7 6-6 6z"/></svg> Ambient Humidity</div></div>
-            <div class="card-value"><span id="val-ambh">--</span><span class="card-unit">%</span></div>
-        </div>
-        <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 2c.6 0 1 .4 1 1v10.8c1.2.8 2 2.2 2 3.7 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-1.5.8-2.9 2-3.7V5c0-.6.4-1 1-1z"/></svg> Conditioned Temp</div></div>
-            <div class="card-value"><span id="val-dhtt">--</span><span class="card-unit">°C</span></div>
-        </div>
-        <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2.6c-4.3 4.8-8 9-8 13.4 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.4-3.7-8.6-8-13.4zm0 19.4c-3.3 0-6-2.7-6-6 0-3.5 3-7.2 6-11 3 3.8 6 7.5 6 11 0 3.3-2.7 6-6 6z"/></svg> Conditioned Humidity</div></div>
-            <div class="card-value"><span id="val-dhth">--</span><span class="card-unit">%</span></div>
-        </div>
-        <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 17c-1.7 0-3-1.3-3-3 0-1.1.6-2.1 1.6-2.6L11 13V5c0-.6.4-1 1-1s1 .4 1 1v8l.4.4c1 .5 1.6 1.5 1.6 2.6 0 1.7-1.3 3-3 3z"/></svg> Thermistor</div></div>
-            <div class="card-value"><span id="val-wall">--</span><span class="card-unit">°C</span></div>
-        </div>
-    </div>
-
-    <div class="data-grid" style="grid-template-columns: repeat(4, 1fr);">
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">SPS30 PM 1.0</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pm1">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">SPS30 PM 10</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pm10">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">SPS30 > 0.5 µm</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r03">--</span><span class="card-unit" style="font-size: 0.8rem;">#/cm³</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">SPS30 > 1.0 µm</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-r05">--</span><span class="card-unit" style="font-size: 0.8rem;">#/cm³</span></div>
-        </div>
-    </div>
-
-    <div class="section-label">Plantower PMS5003</div>
-    <div class="data-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">PM 1.0</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm1">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">PM 2.5</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm25">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 14px; min-height: 80px;">
-            <div class="card-header">PM 10</div>
-            <div class="card-value" style="font-size: 1.6rem;"><span id="val-pt-pm10">--</span><span class="card-unit" style="font-size: 0.8rem;">µg/m³</span></div>
-        </div>
-    </div>
-    <div class="data-grid" style="grid-template-columns: repeat(6, 1fr);">
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 0.3 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r03">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 0.5 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r05">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 1.0 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r10">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 2.5 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r25">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 5.0 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r50">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-        <div class="glass-card kinetic" style="padding: 12px; min-height: 72px;">
-            <div class="card-header">> 10 µm</div>
-            <div class="card-value" style="font-size: 1.35rem;"><span id="val-pt-r100">--</span><span class="card-unit" style="font-size: 0.72rem;">cnt/0.1L</span></div>
-        </div>
-    </div>
-
-    <div class="glass-card" style="width: calc(100% - 46px); margin-bottom: 20px;">
-        <div class="card-header" style="margin-bottom: 0;">
-            <div class="card-header-left">
-                <svg viewBox="0 0 24 24" style="margin-right:4px;"><path d="M3 3v18h18v-2H5V3H3zm4 14h2v-4H7v4zm4 0h2V9h-2v8zm4 0h2v-6h-2v6z"/></svg> Live Telemetry
+    <main class="app-shell">
+        <header class="top-bar">
+            <div class="brand-lockup">
+                <div class="brand-mark" aria-hidden="true"></div>
+                <div>
+                    <div class="brand-title">Particulate Matter Monitoring Station</div>
+                    <div class="brand-subtitle">Atmospheric control surface</div>
+                </div>
             </div>
-            
-            <div class="layers-wrapper">
-                <button class="btn-icon-bare" onclick="toggleLayerMenu(event)">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <div class="dropdown-menu" id="layer-menu">
+
+            <div class="connection-strip">
+                <span id="connection-status" class="status-pill"><span class="status-dot"></span><span id="connection-label">Offline</span></span>
+                <input type="text" id="ipAddress" value="192.168.4.1" placeholder="IP">
+                <input type="password" id="webReplPass" placeholder="Pass">
+                <button id="connectBtn" class="btn-small">Connect</button>
+            </div>
+        </header>
+
+        <section class="dashboard-grid">
+            <div class="panel hero-panel">
+                <div>
+                    <div class="eyebrow">Primary Air Quality</div>
+                    <h1 class="hero-title">Sensirion SPS30 PM2.5</h1>
+                    <div class="hero-value"><span id="val-pm25">--</span><span class="hero-unit">µg/m³</span></div>
+                    <div id="aqi-descriptor">Awaiting System Data</div>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-label">PM 1.0</div>
+                        <div class="hero-stat-value"><span id="val-pm1">--</span><span class="unit">µg/m³</span></div>
                     </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-label">PM 10</div>
+                        <div class="hero-stat-value"><span id="val-pm10">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-label">SPS30 > 0.5 µm</div>
+                        <div class="hero-stat-value"><span id="val-r03">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-label">SPS30 > 1.0 µm</div>
+                        <div class="hero-stat-value"><span id="val-r05">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                </div>
             </div>
+
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="eyebrow">Live Telemetry</div>
+                        <div class="panel-subtitle">45-sample rolling view</div>
+                    </div>
+                    <div class="layers-wrapper">
+                        <button class="btn-icon-bare" onclick="toggleLayerMenu(event)" aria-label="Select chart layers">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"></path><path d="m2 12 10 5 10-5"></path><path d="m2 17 10 5 10-5"></path></svg>
+                        </button>
+                        <div class="dropdown-menu" id="layer-menu"></div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="telemetryChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-grid">
+            <div class="panel metric-panel">
+                <div class="eyebrow">Ambient Air</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">Temperature</div>
+                        <div class="metric-value"><span id="val-ambt">--</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Humidity</div>
+                        <div class="metric-value"><span id="val-ambh">--</span><span class="unit">%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Conditioned Air</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">Temperature</div>
+                        <div class="metric-value"><span id="val-dhtt">--</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Humidity</div>
+                        <div class="metric-value"><span id="val-dhth">--</span><span class="unit">%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Heater Safety</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">Thermistor</div>
+                        <div class="metric-value"><span id="val-wall">--</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Control Source</div>
+                        <div class="metric-value"><span id="heater-source">Conditioned</span><span class="unit">air</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="particle-grid">
+            <div class="panel metric-panel">
+                <div class="eyebrow">Plantower PMS5003</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">PM 1.0</div>
+                        <div class="metric-value"><span id="val-pt-pm1">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 2.5</div>
+                        <div class="metric-value"><span id="val-pt-pm25">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 10</div>
+                        <div class="metric-value"><span id="val-pt-pm10">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Plantower Raw Counts</div>
+                <div class="plantower-raw">
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 0.3 µm</div>
+                        <div class="raw-value"><span id="val-pt-r03">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 0.5 µm</div>
+                        <div class="raw-value"><span id="val-pt-r05">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 1.0 µm</div>
+                        <div class="raw-value"><span id="val-pt-r10">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 2.5 µm</div>
+                        <div class="raw-value"><span id="val-pt-r25">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 5.0 µm</div>
+                        <div class="raw-value"><span id="val-pt-r50">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 10 µm</div>
+                        <div class="raw-value"><span id="val-pt-r100">--</span><span class="unit">cnt/0.1L</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="bottom-panel">
+        <div class="segment-group" id="mode-group">
+            <div class="segment-bg" id="mode-bg"></div>
+            <button class="segment-btn active" id="btn-auto" onclick="setMode('auto')">Auto</button>
+            <button class="segment-btn" id="btn-manual" onclick="setMode('manual')">Manual</button>
         </div>
-        <div class="chart-container">
-            <canvas id="telemetryChart"></canvas>
+
+        <div class="segment-group heater-off" id="heater-group">
+            <div class="segment-bg" id="heater-bg"></div>
+            <button class="segment-btn" id="btn-on" onclick="setHeater('high')">Heater ON</button>
+            <button class="segment-btn active" id="btn-off" onclick="setHeater('low')">Off</button>
         </div>
+
+        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
     </div>
-</div>
 
-<div class="bottom-panel">
-    <div class="segment-group" id="mode-group">
-        <div class="segment-bg" id="mode-bg"></div>
-        <button class="segment-btn active" id="btn-auto" onclick="setMode('auto')">Auto</button>
-        <button class="segment-btn" id="btn-manual" onclick="setMode('manual')">Manual</button>
-    </div>
-    
-    <div class="segment-group heater-off" id="heater-group">
-        <div class="segment-bg" id="heater-bg"></div>
-        <button class="segment-btn" id="btn-on" onclick="setHeater('high')">Heater ON</button>
-        <button class="segment-btn active" id="btn-off" onclick="setHeater('low')">OFF</button>
-    </div>
-    
-    <button class="export-btn" onclick="exportCSV()">Export CSV</button>
-</div>
+    <script>
+        const datasetsConfig = [
+            { label: 'Thermistor', borderColor: '#d7a115', hidden: false },
+            { label: 'Conditioned Temp', borderColor: '#dd5f42', hidden: true },
+            { label: 'Conditioned Humidity', borderColor: '#3f88c5', hidden: false },
+            { label: 'PM 1.0', borderColor: '#4d9f72', hidden: true },
+            { label: 'PM 2.5', borderColor: '#2a9d8f', hidden: false },
+            { label: 'PM 10', borderColor: '#317f64', hidden: true },
+            { label: 'SPS30 >0.5µm', borderColor: '#8f6cba', hidden: false },
+            { label: 'SPS30 >1.0µm', borderColor: '#6572c8', hidden: true }
+        ];
 
-<script>
-    // --- Cursor Tracking ---
-    document.querySelectorAll('.kinetic').forEach(card => {
-        card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
-            card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-            card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-        });
-    });
-
-    // --- Bottom Panel Logic ---
-    function setMode(mode) {
-        const group = document.getElementById('mode-group');
-        document.getElementById('btn-auto').classList.toggle('active', mode === 'auto');
-        document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
-        if (mode === 'manual') group.classList.add('mode-manual'); else group.classList.remove('mode-manual');
-        sendCommand(mode);
-    }
-
-    function setHeater(state) {
-        const group = document.getElementById('heater-group');
-        document.getElementById('btn-on').classList.toggle('active', state === 'high');
-        document.getElementById('btn-off').classList.toggle('active', state === 'low');
-        if (state === 'low') group.classList.add('heater-off'); else group.classList.remove('heater-off');
-        sendCommand(state);
-    }
-
-    // --- Chart.js Initialization ---
-    const chartAvailable = typeof Chart !== 'undefined';
-    const datasetsConfig = [
-        { label: 'Thermistor', borderColor: '#ffd60a', hidden: false },
-        { label: 'Conditioned Temp', borderColor: '#ff453a', hidden: true },
-        { label: 'Conditioned Humidity', borderColor: '#64d2ff', hidden: false },
-        { label: 'PM 1.0', borderColor: '#34c759', hidden: true },
-        { label: 'PM 2.5', borderColor: '#30d158', hidden: false },
-        { label: 'PM 10', borderColor: '#28a745', hidden: true },
-        { label: 'SPS30 >0.5µm', borderColor: '#bf5af2', hidden: false, yAxisID: 'y1' },
-        { label: 'SPS30 >1.0µm', borderColor: '#5e5ce6', hidden: true, yAxisID: 'y1' }
-    ];
-
-    let telemetryChart;
-    if (chartAvailable) {
-        Chart.defaults.color = 'rgba(255,255,255,0.7)';
-        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-
-        const ctx = document.getElementById('telemetryChart').getContext('2d');
-        telemetryChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: datasetsConfig.map(ds => ({
-                    label: ds.label, borderColor: ds.borderColor, backgroundColor: ds.borderColor,
-                    data: [], tension: 0.4, yAxisID: ds.yAxisID || 'y', hidden: ds.hidden
-                }))
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
-                    y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } },
-                    y1: { type: 'linear', display: true, position: 'right', grid: { display: false, drawBorder: false } }
-                }
-            }
-        });
-    } else {
-        const fallbackCanvas = document.getElementById('telemetryChart');
-        const fallbackCtx = fallbackCanvas.getContext('2d');
-        telemetryChart = {
+        const telemetryChart = {
             data: {
                 labels: [],
                 datasets: datasetsConfig.map(ds => ({
@@ -493,320 +802,366 @@
                 this.data.datasets[index].hidden = !visible;
             },
             update() {
-                drawFallbackChart(fallbackCanvas, fallbackCtx, this.data.datasets);
+                drawTelemetryChart();
             }
         };
-        telemetryChart.update();
-    }
 
-    function drawFallbackChart(canvas, ctx, datasets) {
-        const rect = canvas.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        const width = Math.max(1, Math.floor(rect.width));
-        const height = Math.max(1, Math.floor(rect.height));
+        const chartCanvas = document.getElementById('telemetryChart');
+        const chartCtx = chartCanvas.getContext('2d');
 
-        if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
+        function setConnectionState(label, isLive = false) {
+            const status = document.getElementById('connection-status');
+            document.getElementById('connection-label').innerText = label;
+            status.classList.toggle('live', isLive);
         }
 
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, width, height);
+        function setMode(mode, send = true) {
+            const group = document.getElementById('mode-group');
+            document.getElementById('btn-auto').classList.toggle('active', mode === 'auto');
+            document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
+            group.classList.toggle('mode-manual', mode === 'manual');
+            if (send) sendCommand(mode);
+        }
 
-        const padding = { top: 18, right: 96, bottom: 34, left: 52 };
-        const plotW = width - padding.left - padding.right;
-        const plotH = height - padding.top - padding.bottom;
-        const visibleDatasets = datasets.filter(ds => !ds.hidden && ds.data.some(v => Number.isFinite(v)));
+        function setHeater(state, send = true) {
+            const group = document.getElementById('heater-group');
+            document.getElementById('btn-on').classList.toggle('active', state === 'high');
+            document.getElementById('btn-off').classList.toggle('active', state === 'low');
+            group.classList.toggle('heater-off', state === 'low');
+            if (send) sendCommand(state);
+        }
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.lineWidth = 1;
-        ctx.font = '11px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.68)';
+        function drawTelemetryChart() {
+            const rect = chartCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const width = Math.max(1, Math.floor(rect.width));
+            const height = Math.max(1, Math.floor(rect.height));
 
-        if (!visibleDatasets.length) {
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + (plotH * i / 4);
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
+            if (chartCanvas.width !== width * dpr || chartCanvas.height !== height * dpr) {
+                chartCanvas.width = width * dpr;
+                chartCanvas.height = height * dpr;
             }
-            ctx.textAlign = 'left';
-            ctx.fillText('Waiting for telemetry...', padding.left, padding.top + 22);
-            return;
-        }
 
-        const values = visibleDatasets.flatMap(ds => ds.data.filter(v => Number.isFinite(v)));
-        let min = Math.min(...values);
-        let max = Math.max(...values);
-        if (min === max) {
-            min -= 1;
-            max += 1;
-        }
+            chartCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            chartCtx.clearRect(0, 0, width, height);
 
-        const range = max - min;
-        min -= range * 0.08;
-        max += range * 0.08;
+            const padding = { top: 14, right: 88, bottom: 34, left: 52 };
+            const plotW = width - padding.left - padding.right;
+            const plotH = height - padding.top - padding.bottom;
+            const visibleDatasets = telemetryChart.data.datasets.filter(ds => !ds.hidden && ds.data.some(v => Number.isFinite(v)));
 
-        const maxPoints = Math.max(...visibleDatasets.map(ds => ds.data.length), 2);
-        const xFor = index => padding.left + (plotW * index / Math.max(1, maxPoints - 1));
-        const yFor = value => padding.top + plotH - ((value - min) / (max - min)) * plotH;
+            chartCtx.strokeStyle = 'rgba(20, 32, 34, 0.11)';
+            chartCtx.lineWidth = 1;
+            chartCtx.font = '11px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+            chartCtx.fillStyle = 'rgba(20, 32, 34, 0.54)';
 
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'right';
-        for (let i = 0; i <= 4; i++) {
-            const y = padding.top + (plotH * i / 4);
-            const value = max - ((max - min) * i / 4);
-            ctx.beginPath();
-            ctx.moveTo(padding.left, y);
-            ctx.lineTo(width - padding.right, y);
-            ctx.stroke();
-            ctx.fillText(formatDisplay(value, 1), padding.left - 8, y);
-        }
+            if (!visibleDatasets.length) {
+                drawGrid(padding, plotW, plotH, width, null, null);
+                chartCtx.textAlign = 'left';
+                chartCtx.fillText('Waiting for telemetry...', padding.left, padding.top + 22);
+                return;
+            }
 
-        ctx.textBaseline = 'alphabetic';
-        ctx.textAlign = 'left';
-        ctx.fillText(telemetryChart.data.labels[0] || '', padding.left, height - 8);
-        ctx.textAlign = 'right';
-        ctx.fillText(
-            telemetryChart.data.labels[telemetryChart.data.labels.length - 1] || '',
-            width - padding.right,
-            height - 8
-        );
+            const values = visibleDatasets.flatMap(ds => ds.data.filter(v => Number.isFinite(v)));
+            let min = Math.min(...values);
+            let max = Math.max(...values);
+            if (min === max) {
+                min -= 1;
+                max += 1;
+            }
 
-        visibleDatasets.forEach(ds => {
-            ctx.strokeStyle = ds.borderColor;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            let drawing = false;
+            const range = max - min;
+            min -= range * 0.08;
+            max += range * 0.08;
 
-            ds.data.forEach((value, index) => {
-                if (!Number.isFinite(value)) {
-                    drawing = false;
-                    return;
-                }
+            drawGrid(padding, plotW, plotH, width, min, max);
 
-                const x = xFor(index);
-                const y = yFor(value);
-                if (!drawing) {
-                    ctx.moveTo(x, y);
-                    drawing = true;
-                } else {
-                    ctx.lineTo(x, y);
-                }
+            const maxPoints = Math.max(...visibleDatasets.map(ds => ds.data.length), 2);
+            const xFor = index => padding.left + (plotW * index / Math.max(1, maxPoints - 1));
+            const yFor = value => padding.top + plotH - ((value - min) / (max - min)) * plotH;
+
+            chartCtx.textBaseline = 'alphabetic';
+            chartCtx.textAlign = 'left';
+            chartCtx.fillStyle = 'rgba(20, 32, 34, 0.46)';
+            chartCtx.fillText(telemetryChart.data.labels[0] || '', padding.left, height - 8);
+            chartCtx.textAlign = 'right';
+            chartCtx.fillText(telemetryChart.data.labels[telemetryChart.data.labels.length - 1] || '', width - padding.right, height - 8);
+
+            visibleDatasets.forEach(ds => {
+                chartCtx.strokeStyle = ds.borderColor;
+                chartCtx.lineWidth = 2.4;
+                chartCtx.beginPath();
+                let drawing = false;
+
+                ds.data.forEach((value, index) => {
+                    if (!Number.isFinite(value)) {
+                        drawing = false;
+                        return;
+                    }
+                    const x = xFor(index);
+                    const y = yFor(value);
+                    if (!drawing) {
+                        chartCtx.moveTo(x, y);
+                        drawing = true;
+                    } else {
+                        chartCtx.lineTo(x, y);
+                    }
+                });
+
+                chartCtx.stroke();
             });
 
-            ctx.stroke();
+            visibleDatasets.slice(0, 5).forEach((ds, index) => {
+                const latest = [...ds.data].reverse().find(v => Number.isFinite(v));
+                if (!Number.isFinite(latest)) return;
+                const y = Math.min(height - padding.bottom - 8, Math.max(padding.top + 8, yFor(latest)));
+                const labelY = y + index * 2;
+                chartCtx.fillStyle = ds.borderColor;
+                chartCtx.fillRect(width - padding.right + 10, labelY - 5, 8, 8);
+                chartCtx.fillStyle = 'rgba(20, 32, 34, 0.72)';
+                chartCtx.textAlign = 'left';
+                chartCtx.textBaseline = 'middle';
+                chartCtx.fillText(formatDisplay(latest, 1), width - padding.right + 24, labelY);
+            });
+        }
+
+        function drawGrid(padding, plotW, plotH, width, min, max) {
+            chartCtx.strokeStyle = 'rgba(20, 32, 34, 0.11)';
+            chartCtx.fillStyle = 'rgba(20, 32, 34, 0.54)';
+            chartCtx.textAlign = 'right';
+            chartCtx.textBaseline = 'middle';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (plotH * i / 4);
+                chartCtx.beginPath();
+                chartCtx.moveTo(padding.left, y);
+                chartCtx.lineTo(width - padding.right, y);
+                chartCtx.stroke();
+                if (Number.isFinite(min) && Number.isFinite(max)) {
+                    const value = max - ((max - min) * i / 4);
+                    chartCtx.fillText(formatDisplay(value, 1), padding.left - 8, y);
+                }
+            }
+        }
+
+        const layerMenu = document.getElementById('layer-menu');
+
+        function toggleLayerMenu(event) {
+            event.stopPropagation();
+            layerMenu.classList.toggle('show');
+        }
+
+        document.addEventListener('click', event => {
+            if (!layerMenu.contains(event.target)) layerMenu.classList.remove('show');
         });
 
-        ctx.font = '12px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-        visibleDatasets.slice(0, 5).forEach((ds, index) => {
-            const latest = [...ds.data].reverse().find(v => Number.isFinite(v));
-            if (!Number.isFinite(latest)) return;
-
-            const y = Math.min(
-                height - padding.bottom - 8,
-                Math.max(padding.top + 8, yFor(latest))
-            );
-            const labelY = y + index * 2;
-            ctx.fillStyle = ds.borderColor;
-            ctx.fillRect(width - padding.right + 10, labelY - 5, 8, 8);
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(formatDisplay(latest, 1), width - padding.right + 24, labelY);
+        telemetryChart.data.datasets.forEach((dataset, index) => {
+            const item = document.createElement('div');
+            item.className = `dropdown-item ${dataset.hidden ? '' : 'active'}`;
+            item.innerHTML = `
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div class="indicator" style="background-color: ${dataset.borderColor};"></div>
+                ${dataset.label}
+            `;
+            item.onclick = event => {
+                event.stopPropagation();
+                const isCurrentlyHidden = telemetryChart.getDatasetMeta(index).hidden;
+                telemetryChart.setDatasetVisibility(index, isCurrentlyHidden);
+                const isNowHidden = telemetryChart.getDatasetMeta(index).hidden;
+                item.classList.toggle('active', !isNowHidden);
+                telemetryChart.update();
+            };
+            layerMenu.appendChild(item);
         });
 
-        let legendX = padding.left;
-        visibleDatasets.slice(0, 4).forEach(ds => {
-            ctx.fillStyle = ds.borderColor;
-            ctx.fillRect(legendX, height - 14, 8, 8);
-            ctx.fillStyle = 'rgba(255,255,255,0.72)';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
-            ctx.fillText(ds.label, legendX + 12, height - 7);
-            legendX += Math.min(145, 28 + ds.label.length * 7);
+        let ws;
+        let buffer = "";
+        let authenticated = false;
+        let passwordSent = false;
+        let sessionData = [["Timestamp", "Mode", "Heater", "Ambient_Temp", "Ambient_Hum", "Conditioned_Temp", "Conditioned_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
+
+        function exportCSV() {
+            if (sessionData.length <= 1) {
+                alert("No data to export.");
+                return;
+            }
+            const blob = new Blob([sessionData.map(row => row.join(",")).join("\n")], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `intake_telemetry_${new Date().getTime()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', () => {
+            if (ws) {
+                ws.close();
+                return;
+            }
+            const ip = document.getElementById('ipAddress').value.trim();
+            setConnectionState('Connecting');
+            ws = new WebSocket(`ws://${ip}:8266`);
+
+            ws.onopen = () => {
+                setConnectionState('Authenticating');
+                document.getElementById('connectBtn').innerText = "Disconnect";
+                buffer = "";
+                authenticated = false;
+                passwordSent = false;
+            };
+            ws.onmessage = event => {
+                if (typeof event.data === "string") {
+                    buffer += event.data;
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        buffer += reader.result;
+                        processBuffer();
+                    };
+                    reader.readAsText(event.data);
+                    return;
+                }
+                processBuffer();
+            };
+            ws.onclose = () => {
+                ws = null;
+                authenticated = false;
+                passwordSent = false;
+                setConnectionState('Offline');
+                document.getElementById('connectBtn').innerText = "Connect";
+            };
+            ws.onerror = () => {
+                setConnectionState('Connection failed');
+            };
         });
-    }
 
-    // --- Layer Menu Logic ---
-    const layerMenu = document.getElementById('layer-menu');
-    
-    function toggleLayerMenu(e) {
-        e.stopPropagation();
-        layerMenu.classList.toggle('show');
-    }
-    
-    document.addEventListener('click', (e) => {
-        if (!layerMenu.contains(e.target)) layerMenu.classList.remove('show');
-    });
+        function sendCommand(command) {
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send(command + "\n");
+        }
 
-    telemetryChart.data.datasets.forEach((dataset, index) => {
-        const item = document.createElement('div');
-        item.className = `dropdown-item ${dataset.hidden ? '' : 'active'}`;
-        item.innerHTML = `
-            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <div class="indicator" style="background-color: ${dataset.borderColor};"></div>
-            ${dataset.label}
-        `;
-        
-        item.onclick = (e) => {
-            e.stopPropagation(); // Keep menu open
-            
-            // Toggle the visibility
-            const isCurrentlyHidden = telemetryChart.getDatasetMeta(index).hidden;
-            telemetryChart.setDatasetVisibility(index, isCurrentlyHidden);
-            
-            // Update the UI checkmark based on the NEW state
-            const isNowHidden = telemetryChart.getDatasetMeta(index).hidden;
-            item.classList.toggle('active', !isNowHidden);
-            
+        function processBuffer() {
+            if (!passwordSent && buffer.includes("Password:")) {
+                const pass = document.getElementById('webReplPass').value.trim();
+                if (pass) {
+                    passwordSent = true;
+                    ws.send(pass + "\n");
+                } else {
+                    ws.close();
+                }
+                buffer = "";
+                return;
+            }
+
+            if (!authenticated && (buffer.includes(">>>") || buffer.includes("DATA:"))) {
+                authenticated = true;
+                passwordSent = true;
+                setConnectionState('Streaming Live', true);
+            }
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+            for (const line of lines) {
+                if (line.includes("DATA:")) parseData(line.substring(line.indexOf("DATA:") + 5).trim());
+            }
+        }
+
+        function updateAtmosphere(pm25) {
+            if (!Number.isFinite(pm25)) return;
+
+            const body = document.body;
+            const aqiText = document.getElementById('aqi-descriptor');
+            body.classList.remove('theme-clear', 'theme-moderate', 'theme-unhealthy');
+
+            if (pm25 <= 12) {
+                body.classList.add('theme-clear');
+                aqiText.innerText = "Air Quality: Ideal";
+            } else if (pm25 <= 35) {
+                body.classList.add('theme-moderate');
+                aqiText.innerText = "Air Quality: Moderate";
+            } else {
+                body.classList.add('theme-unhealthy');
+                aqiText.innerText = "Air Quality: High Risk";
+            }
+        }
+
+        function parseNumber(value) {
+            if (value === "Err") return null;
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function formatDisplay(value, decimals = 1) {
+            if (!Number.isFinite(value)) return "--";
+            return value.toFixed(decimals);
+        }
+
+        function formatCount(value) {
+            if (!Number.isFinite(value)) return "--";
+            return Math.round(value).toString();
+        }
+
+        function setFormattedValue(id, rawValue, decimals = 1) {
+            document.getElementById(id).innerText = formatDisplay(parseNumber(rawValue), decimals);
+        }
+
+        function setFormattedCount(id, rawValue) {
+            document.getElementById(id).innerText = formatCount(parseNumber(rawValue));
+        }
+
+        function parseData(dataStr) {
+            const parts = dataStr.split(",");
+            if (parts.length < 25) return;
+
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+            sessionData.push([timeString, ...parts]);
+
+            setMode(parts[0] === "AUTOMATIC" ? 'auto' : 'manual', false);
+            setHeater(parts[1] === "ON" ? 'high' : 'low', false);
+
+            setFormattedValue('val-ambt', parts[2], 1);
+            setFormattedValue('val-ambh', parts[3], 1);
+            setFormattedValue('val-dhtt', parts[4], 1);
+            setFormattedValue('val-dhth', parts[5], 1);
+            setFormattedValue('val-wall', parts[6], 1);
+
+            const pm25Val = parseNumber(parts[8]);
+            setFormattedValue('val-pm1', parts[7], 2);
+            setFormattedValue('val-pm25', parts[8], 2);
+            setFormattedValue('val-pm10', parts[9], 2);
+            setFormattedValue('val-r03', parts[11], 1);
+            setFormattedValue('val-r05', parts[12], 1);
+            setFormattedValue('val-pt-pm1', parts[16], 0);
+            setFormattedValue('val-pt-pm25', parts[17], 0);
+            setFormattedValue('val-pt-pm10', parts[18], 0);
+            setFormattedCount('val-pt-r03', parts[19]);
+            setFormattedCount('val-pt-r05', parts[20]);
+            setFormattedCount('val-pt-r10', parts[21]);
+            setFormattedCount('val-pt-r25', parts[22]);
+            setFormattedCount('val-pt-r50', parts[23]);
+            setFormattedCount('val-pt-r100', parts[24]);
+
+            updateAtmosphere(pm25Val);
+
+            telemetryChart.data.labels.push(timeString);
+            telemetryChart.data.datasets[0].data.push(parseNumber(parts[6]));
+            telemetryChart.data.datasets[1].data.push(parseNumber(parts[4]));
+            telemetryChart.data.datasets[2].data.push(parseNumber(parts[5]));
+            telemetryChart.data.datasets[3].data.push(parseNumber(parts[7]));
+            telemetryChart.data.datasets[4].data.push(pm25Val);
+            telemetryChart.data.datasets[5].data.push(parseNumber(parts[9]));
+            telemetryChart.data.datasets[6].data.push(parseNumber(parts[11]));
+            telemetryChart.data.datasets[7].data.push(parseNumber(parts[12]));
+
+            if (telemetryChart.data.labels.length > 45) {
+                telemetryChart.data.labels.shift();
+                telemetryChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
             telemetryChart.update();
-        };
-        layerMenu.appendChild(item);
-    });
-
-    // --- WebREPL Logic & Logging ---
-    let ws; let buffer = ""; let authenticated = false; let passwordSent = false;
-    let sessionData = [["Timestamp", "Mode", "Heater", "Ambient_Temp", "Ambient_Hum", "Conditioned_Temp", "Conditioned_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
-
-    function exportCSV() {
-        if (sessionData.length <= 1) { alert("No data to export!"); return; }
-        let blob = new Blob([sessionData.map(e => e.join(",")).join("\n")], { type: 'text/csv;charset=utf-8;' });
-        let link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `intake_telemetry_${new Date().getTime()}.csv`;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
-
-    document.getElementById('connectBtn').addEventListener('click', () => {
-        if (ws) { ws.close(); return; }
-        const ip = document.getElementById('ipAddress').value.trim();
-        document.getElementById('connection-status').innerText = `Connecting...`;
-        ws = new WebSocket(`ws://${ip}:8266`);
-
-        ws.onopen = () => {
-            document.getElementById('connection-status').innerText = "Authenticating..."; 
-            document.getElementById('connectBtn').innerText = "Disconnect";
-            buffer = ""; authenticated = false; passwordSent = false;
-        };
-        ws.onmessage = (event) => {
-            if (typeof event.data === "string") { buffer += event.data; } 
-            else { const reader = new FileReader(); reader.onload = () => { buffer += reader.result; processBuffer(); }; reader.readAsText(event.data); return; }
-            processBuffer();
-        };
-        ws.onclose = () => {
-            ws = null; authenticated = false; passwordSent = false;
-            document.getElementById('connection-status').innerText = "Offline"; 
-            document.getElementById('connectBtn').innerText = "Connect";
-        };
-        ws.onerror = () => {
-            document.getElementById('connection-status').innerText = "Connection failed";
-        };
-    });
-
-    function sendCommand(cmd) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(cmd + "\n"); }
-
-    function processBuffer() {
-        if (!passwordSent && buffer.includes("Password:")) {
-            const pass = document.getElementById('webReplPass').value.trim();
-            if (pass) { passwordSent = true; ws.send(pass + "\n"); } else { ws.close(); }
-            buffer = ""; return;
         }
-        if (!authenticated && (buffer.includes(">>>") || buffer.includes("DATA:"))) {
-            authenticated = true; passwordSent = true;
-            document.getElementById('connection-status').innerText = "Streaming Live";
-        }
-        let lines = buffer.split("\n"); buffer = lines.pop(); 
-        for (let line of lines) { if (line.includes("DATA:")) parseData(line.substring(line.indexOf("DATA:") + 5).trim()); }
-    }
 
-    function updateAtmosphere(pm25) {
-        if (!Number.isFinite(pm25)) return;
-
-        const body = document.body;
-        const aqiText = document.getElementById('aqi-descriptor');
-        body.classList.remove('theme-clear', 'theme-moderate', 'theme-unhealthy');
-        if (pm25 <= 12) { body.classList.add('theme-clear'); aqiText.innerText = "Air Quality: Ideal"; } 
-        else if (pm25 <= 35) { body.classList.add('theme-moderate'); aqiText.innerText = "Air Quality: Moderate Risk"; } 
-        else { body.classList.add('theme-unhealthy'); aqiText.innerText = "Air Quality: High Risk"; }
-    }
-
-    function parseNumber(value) {
-        if (value === "Err") return null;
-        const parsed = parseFloat(value);
-        return Number.isFinite(parsed) ? parsed : null;
-    }
-
-    function formatDisplay(value, decimals = 1) {
-        if (!Number.isFinite(value)) return "--";
-        return value.toFixed(decimals);
-    }
-
-    function formatCount(value) {
-        if (!Number.isFinite(value)) return "--";
-        return Math.round(value).toString();
-    }
-
-    function setFormattedValue(id, rawValue, decimals = 1) {
-        document.getElementById(id).innerText = formatDisplay(parseNumber(rawValue), decimals);
-    }
-
-    function setFormattedCount(id, rawValue) {
-        document.getElementById(id).innerText = formatCount(parseNumber(rawValue));
-    }
-
-    function parseData(dataStr) {
-        let parts = dataStr.split(",");
-        if (parts.length < 25) return;
-
-        let now = new Date();
-        let timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-        sessionData.push([timeString, ...parts]);
-
-        if(parts[0] === "AUTOMATIC") setMode('auto'); else setMode('manual');
-        if(parts[1] === "ON") setHeater('high'); else setHeater('low');
-
-        setFormattedValue('val-ambt', parts[2], 1);
-        setFormattedValue('val-ambh', parts[3], 1);
-        setFormattedValue('val-dhtt', parts[4], 1);
-        setFormattedValue('val-dhth', parts[5], 1);
-        setFormattedValue('val-wall', parts[6], 1);
-        
-        let pm25Val = parseNumber(parts[8]);
-        setFormattedValue('val-pm1', parts[7], 2);
-        setFormattedValue('val-pm25', parts[8], 2);
-        setFormattedValue('val-pm10', parts[9], 2);
-        setFormattedValue('val-r03', parts[11], 1);
-        setFormattedValue('val-r05', parts[12], 1);
-        setFormattedValue('val-pt-pm1', parts[16], 0);
-        setFormattedValue('val-pt-pm25', parts[17], 0);
-        setFormattedValue('val-pt-pm10', parts[18], 0);
-        setFormattedCount('val-pt-r03', parts[19]);
-        setFormattedCount('val-pt-r05', parts[20]);
-        setFormattedCount('val-pt-r10', parts[21]);
-        setFormattedCount('val-pt-r25', parts[22]);
-        setFormattedCount('val-pt-r50', parts[23]);
-        setFormattedCount('val-pt-r100', parts[24]);
-
-        updateAtmosphere(pm25Val);
-
-        telemetryChart.data.labels.push(timeString);
-        telemetryChart.data.datasets[0].data.push(parseNumber(parts[6]));
-        telemetryChart.data.datasets[1].data.push(parseNumber(parts[4]));
-        telemetryChart.data.datasets[2].data.push(parseNumber(parts[5]));
-        telemetryChart.data.datasets[3].data.push(parseNumber(parts[7]));
-        telemetryChart.data.datasets[4].data.push(pm25Val);
-        telemetryChart.data.datasets[5].data.push(parseNumber(parts[9]));
-        telemetryChart.data.datasets[6].data.push(parseNumber(parts[11]));
-        telemetryChart.data.datasets[7].data.push(parseNumber(parts[12]));
-
-        if (telemetryChart.data.labels.length > 45) {
-            telemetryChart.data.labels.shift();
-            telemetryChart.data.datasets.forEach(d => d.data.shift());
-        }
-        telemetryChart.update('none'); 
-    }
-</script>
+        window.addEventListener('resize', () => telemetryChart.update());
+        telemetryChart.update();
+    </script>
 </body>
 </html>
