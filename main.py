@@ -11,14 +11,16 @@ from thermistor import Thermistor
 
 # Pins and sensor settings
 HEATER_PIN = 25
-I2C_SCL_PIN = 22
-I2C_SDA_PIN = 21
+AMBIENT_I2C_SCL_PIN = 22
+AMBIENT_I2C_SDA_PIN = 21
+CONDITIONED_I2C_SCL_PIN = 19
+CONDITIONED_I2C_SDA_PIN = 18
 THERMISTOR_PIN = 34
 PLANTOWER_UART_ID = 2
 PLANTOWER_TX_PIN = 17
 PLANTOWER_RX_PIN = 16
 
-SHT_HUMIDITY_TRIGGER = 40
+CONDITIONED_HUMIDITY_TRIGGER = 40
 THERMISTOR_CUTOFF_C = 45.0
 HEATER_ON_MS = 5_000
 HEATER_COOLDOWN_MS = 35_000
@@ -94,17 +96,27 @@ class CircuitPythonI2CAdapter:
         self.readfrom_into(address, in_buffer, start=in_start, end=in_end)
 
 
+ambient_i2c = machine.I2C(
+    0,
+    scl=machine.Pin(AMBIENT_I2C_SCL_PIN),
+    sda=machine.Pin(AMBIENT_I2C_SDA_PIN),
+)
+conditioned_i2c = machine.I2C(
+    1,
+    scl=machine.Pin(CONDITIONED_I2C_SCL_PIN),
+    sda=machine.Pin(CONDITIONED_I2C_SDA_PIN),
+)
+
+ambient_sht = SHT4x(CircuitPythonI2CAdapter(ambient_i2c))
+ambient_sht.mode = Mode.NOHEAT_HIGHPRECISION
+
+conditioned_sht = SHT4x(CircuitPythonI2CAdapter(conditioned_i2c))
+conditioned_sht.mode = Mode.NOHEAT_HIGHPRECISION
+
+sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(ambient_i2c))
+
 heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
 heater.value(0)
-
-sht_i2c = machine.I2C(
-    0,
-    scl=machine.Pin(I2C_SCL_PIN),
-    sda=machine.Pin(I2C_SDA_PIN),
-)
-sht_sensor = SHT4x(CircuitPythonI2CAdapter(sht_i2c))
-sht_sensor.mode = Mode.NOHEAT_HIGHPRECISION
-sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(sht_i2c))
 
 plantower_uart = machine.UART(
     PLANTOWER_UART_ID,
@@ -203,9 +215,9 @@ def update_cooldown(now):
         cooldown_active = False
 
 
-def read_sht41():
+def read_sht41(sensor):
     try:
-        return sht_sensor.measurements
+        return sensor.measurements
     except Exception:
         return "Err", "Err"
 
@@ -271,11 +283,14 @@ def read_plantower_pm():
     return last_plantower_pm
 
 
-def should_heat(sht_humidity, thermistor_c):
+def should_heat(conditioned_humidity, thermistor_c):
     if mode == MODE_MANUAL:
         target = heater_is_on
     else:
-        target = sht_humidity != "Err" and sht_humidity > SHT_HUMIDITY_TRIGGER
+        target = (
+            conditioned_humidity != "Err"
+            and conditioned_humidity > CONDITIONED_HUMIDITY_TRIGGER
+        )
 
     if thermistor_c >= THERMISTOR_CUTOFF_C:
         target = False
@@ -293,13 +308,23 @@ def heater_status():
     return "OFF"
 
 
-def print_data(sht_temp, sht_humidity, thermistor_c, sensirion_pm, plantower_pm):
+def print_data(
+    ambient_temp,
+    ambient_humidity,
+    conditioned_temp,
+    conditioned_humidity,
+    thermistor_c,
+    sensirion_pm,
+    plantower_pm,
+):
     print(
-        "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
+        "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
             mode,
             heater_status(),
-            sht_temp,
-            sht_humidity,
+            ambient_temp,
+            ambient_humidity,
+            conditioned_temp,
+            conditioned_humidity,
             round(thermistor_c, 1),
             sensirion_pm["pm1"],
             sensirion_pm["pm25"],
@@ -335,12 +360,21 @@ while True:
     if time.ticks_diff(now, last_read_at) >= READ_INTERVAL_MS:
         last_read_at = now
 
-        sht_temp, sht_humidity = read_sht41()
+        ambient_temp, ambient_humidity = read_sht41(ambient_sht)
+        conditioned_temp, conditioned_humidity = read_sht41(conditioned_sht)
         thermistor_c = read_thermistor_c()
         sensirion_pm = read_sensirion_pm()
         plantower_pm = read_plantower_pm()
 
-        set_heater(should_heat(sht_humidity, thermistor_c), now)
-        print_data(sht_temp, sht_humidity, thermistor_c, sensirion_pm, plantower_pm)
+        set_heater(should_heat(conditioned_humidity, thermistor_c), now)
+        print_data(
+            ambient_temp,
+            ambient_humidity,
+            conditioned_temp,
+            conditioned_humidity,
+            thermistor_c,
+            sensirion_pm,
+            plantower_pm,
+        )
 
     time.sleep(0.1)

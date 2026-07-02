@@ -288,11 +288,19 @@
 
     <div class="data-grid">
         <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 2c.6 0 1 .4 1 1v10.8c1.2.8 2 2.2 2 3.7 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-1.5.8-2.9 2-3.7V5c0-.6.4-1 1-1z"/></svg> SHT41 Temp</div></div>
+            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 2c.6 0 1 .4 1 1v10.8c1.2.8 2 2.2 2 3.7 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-1.5.8-2.9 2-3.7V5c0-.6.4-1 1-1z"/></svg> Ambient Temp</div></div>
+            <div class="card-value"><span id="val-ambt">--</span><span class="card-unit">°C</span></div>
+        </div>
+        <div class="glass-card kinetic">
+            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2.6c-4.3 4.8-8 9-8 13.4 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.4-3.7-8.6-8-13.4zm0 19.4c-3.3 0-6-2.7-6-6 0-3.5 3-7.2 6-11 3 3.8 6 7.5 6 11 0 3.3-2.7 6-6 6z"/></svg> Ambient Humidity</div></div>
+            <div class="card-value"><span id="val-ambh">--</span><span class="card-unit">%</span></div>
+        </div>
+        <div class="glass-card kinetic">
+            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5v9.3C7.2 15.5 6 17.6 6 20c0 3.3 2.7 6 6 6s6-2.7 6-6c0-2.4-1.2-4.5-3-5.7V5c0-1.7-1.3-3-3-3zm0 2c.6 0 1 .4 1 1v10.8c1.2.8 2 2.2 2 3.7 0 2.2-1.8 4-4 4s-4-1.8-4-4c0-1.5.8-2.9 2-3.7V5c0-.6.4-1 1-1z"/></svg> Conditioned Temp</div></div>
             <div class="card-value"><span id="val-dhtt">--</span><span class="card-unit">°C</span></div>
         </div>
         <div class="glass-card kinetic">
-            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2.6c-4.3 4.8-8 9-8 13.4 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.4-3.7-8.6-8-13.4zm0 19.4c-3.3 0-6-2.7-6-6 0-3.5 3-7.2 6-11 3 3.8 6 7.5 6 11 0 3.3-2.7 6-6 6z"/></svg> Humidity</div></div>
+            <div class="card-header"><div class="card-header-left"><svg viewBox="0 0 24 24"><path d="M12 2.6c-4.3 4.8-8 9-8 13.4 0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.4-3.7-8.6-8-13.4zm0 19.4c-3.3 0-6-2.7-6-6 0-3.5 3-7.2 6-11 3 3.8 6 7.5 6 11 0 3.3-2.7 6-6 6z"/></svg> Conditioned Humidity</div></div>
             <div class="card-value"><span id="val-dhth">--</span><span class="card-unit">%</span></div>
         </div>
         <div class="glass-card kinetic">
@@ -432,8 +440,8 @@
     const ctx = document.getElementById('telemetryChart').getContext('2d');
     const datasetsConfig = [
         { label: 'Thermistor', borderColor: '#ffd60a', hidden: false },
-        { label: 'SHT41 Temp', borderColor: '#ff453a', hidden: true },
-        { label: 'Humidity', borderColor: '#64d2ff', hidden: false },
+        { label: 'Conditioned Temp', borderColor: '#ff453a', hidden: true },
+        { label: 'Conditioned Humidity', borderColor: '#64d2ff', hidden: false },
         { label: 'PM 1.0', borderColor: '#34c759', hidden: true },
         { label: 'PM 2.5', borderColor: '#30d158', hidden: false },
         { label: 'PM 10', borderColor: '#28a745', hidden: true },
@@ -501,7 +509,7 @@
 
     // --- WebREPL Logic & Logging ---
     let ws; let buffer = ""; let authenticated = false; let passwordSent = false;
-    let sessionData = [["Timestamp", "Mode", "Heater", "SHT41_Temp", "SHT41_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
+    let sessionData = [["Timestamp", "Mode", "Heater", "Ambient_Temp", "Ambient_Hum", "Conditioned_Temp", "Conditioned_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
 
     function exportCSV() {
         if (sessionData.length <= 1) { alert("No data to export!"); return; }
@@ -562,7 +570,7 @@
 
     function parseData(dataStr) {
         let parts = dataStr.split(",");
-        if (parts.length < 23) return;
+        if (parts.length < 25) return;
 
         let now = new Date();
         let timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
@@ -571,37 +579,39 @@
         if(parts[0] === "AUTOMATIC") setMode('auto'); else setMode('manual');
         if(parts[1] === "ON") setHeater('high'); else setHeater('low');
 
-        document.getElementById('val-dhtt').innerText = parts[2] !== "Err" ? parts[2] : "--";
-        document.getElementById('val-dhth').innerText = parts[3] !== "Err" ? parts[3] : "--";
-        document.getElementById('val-wall').innerText = parts[4];
+        document.getElementById('val-ambt').innerText = parts[2] !== "Err" ? parts[2] : "--";
+        document.getElementById('val-ambh').innerText = parts[3] !== "Err" ? parts[3] : "--";
+        document.getElementById('val-dhtt').innerText = parts[4] !== "Err" ? parts[4] : "--";
+        document.getElementById('val-dhth').innerText = parts[5] !== "Err" ? parts[5] : "--";
+        document.getElementById('val-wall').innerText = parts[6];
         
-        let pm25Val = parseFloat(parts[6]);
-        document.getElementById('val-pm1').innerText = parts[5];
+        let pm25Val = parseFloat(parts[8]);
+        document.getElementById('val-pm1').innerText = parts[7];
         document.getElementById('val-pm25').innerText = pm25Val;
-        document.getElementById('val-pm10').innerText = parts[7];
-        document.getElementById('val-r03').innerText = parts[9];
-        document.getElementById('val-r05').innerText = parts[10];
-        document.getElementById('val-pt-pm1').innerText = parts[14];
-        document.getElementById('val-pt-pm25').innerText = parts[15];
-        document.getElementById('val-pt-pm10').innerText = parts[16];
-        document.getElementById('val-pt-r03').innerText = parts[17];
-        document.getElementById('val-pt-r05').innerText = parts[18];
-        document.getElementById('val-pt-r10').innerText = parts[19];
-        document.getElementById('val-pt-r25').innerText = parts[20];
-        document.getElementById('val-pt-r50').innerText = parts[21];
-        document.getElementById('val-pt-r100').innerText = parts[22];
+        document.getElementById('val-pm10').innerText = parts[9];
+        document.getElementById('val-r03').innerText = parts[11];
+        document.getElementById('val-r05').innerText = parts[12];
+        document.getElementById('val-pt-pm1').innerText = parts[16];
+        document.getElementById('val-pt-pm25').innerText = parts[17];
+        document.getElementById('val-pt-pm10').innerText = parts[18];
+        document.getElementById('val-pt-r03').innerText = parts[19];
+        document.getElementById('val-pt-r05').innerText = parts[20];
+        document.getElementById('val-pt-r10').innerText = parts[21];
+        document.getElementById('val-pt-r25').innerText = parts[22];
+        document.getElementById('val-pt-r50').innerText = parts[23];
+        document.getElementById('val-pt-r100').innerText = parts[24];
 
         updateAtmosphere(pm25Val);
 
         telemetryChart.data.labels.push(timeString);
-        telemetryChart.data.datasets[0].data.push(parseFloat(parts[4]));
-        telemetryChart.data.datasets[1].data.push(parts[2] !== "Err" ? parseFloat(parts[2]) : null);
-        telemetryChart.data.datasets[2].data.push(parts[3] !== "Err" ? parseFloat(parts[3]) : null);
-        telemetryChart.data.datasets[3].data.push(parseFloat(parts[5]));
+        telemetryChart.data.datasets[0].data.push(parseFloat(parts[6]));
+        telemetryChart.data.datasets[1].data.push(parts[4] !== "Err" ? parseFloat(parts[4]) : null);
+        telemetryChart.data.datasets[2].data.push(parts[5] !== "Err" ? parseFloat(parts[5]) : null);
+        telemetryChart.data.datasets[3].data.push(parseFloat(parts[7]));
         telemetryChart.data.datasets[4].data.push(pm25Val);
-        telemetryChart.data.datasets[5].data.push(parseFloat(parts[7]));
-        telemetryChart.data.datasets[6].data.push(parseFloat(parts[9]));
-        telemetryChart.data.datasets[7].data.push(parseFloat(parts[10]));
+        telemetryChart.data.datasets[5].data.push(parseFloat(parts[9]));
+        telemetryChart.data.datasets[6].data.push(parseFloat(parts[11]));
+        telemetryChart.data.datasets[7].data.push(parseFloat(parts[12]));
 
         if (telemetryChart.data.labels.length > 45) {
             telemetryChart.data.labels.shift();
