@@ -434,10 +434,7 @@
     }
 
     // --- Chart.js Initialization ---
-    Chart.defaults.color = 'rgba(255,255,255,0.7)';
-    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-
-    const ctx = document.getElementById('telemetryChart').getContext('2d');
+    const chartAvailable = typeof Chart !== 'undefined';
     const datasetsConfig = [
         { label: 'Thermistor', borderColor: '#ffd60a', hidden: false },
         { label: 'Conditioned Temp', borderColor: '#ff453a', hidden: true },
@@ -449,26 +446,53 @@
         { label: 'SPS30 >1.0µm', borderColor: '#5e5ce6', hidden: true, yAxisID: 'y1' }
     ];
 
-    const telemetryChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: datasetsConfig.map(ds => ({
-                label: ds.label, borderColor: ds.borderColor, backgroundColor: ds.borderColor,
-                data: [], tension: 0.4, yAxisID: ds.yAxisID || 'y', hidden: ds.hidden
-            }))
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
-                y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } },
-                y1: { type: 'linear', display: true, position: 'right', grid: { display: false, drawBorder: false } }
+    let telemetryChart;
+    if (chartAvailable) {
+        Chart.defaults.color = 'rgba(255,255,255,0.7)';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+
+        const ctx = document.getElementById('telemetryChart').getContext('2d');
+        telemetryChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: datasetsConfig.map(ds => ({
+                    label: ds.label, borderColor: ds.borderColor, backgroundColor: ds.borderColor,
+                    data: [], tension: 0.4, yAxisID: ds.yAxisID || 'y', hidden: ds.hidden
+                }))
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+                    y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { display: false, drawBorder: false } }
+                }
             }
-        }
-    });
+        });
+    } else {
+        document.getElementById('connection-status').innerText = "Chart missing, data cards ready";
+        telemetryChart = {
+            data: {
+                labels: [],
+                datasets: datasetsConfig.map(ds => ({
+                    label: ds.label,
+                    borderColor: ds.borderColor,
+                    data: [],
+                    hidden: ds.hidden
+                }))
+            },
+            getDatasetMeta(index) {
+                return { hidden: this.data.datasets[index].hidden };
+            },
+            setDatasetVisibility(index, visible) {
+                this.data.datasets[index].hidden = !visible;
+            },
+            update() {}
+        };
+    }
 
     // --- Layer Menu Logic ---
     const layerMenu = document.getElementById('layer-menu');
@@ -540,6 +564,9 @@
             ws = null; authenticated = false; passwordSent = false;
             document.getElementById('connection-status').innerText = "Offline"; 
             document.getElementById('connectBtn').innerText = "Connect";
+        };
+        ws.onerror = () => {
+            document.getElementById('connection-status').innerText = "Connection failed";
         };
     });
 
