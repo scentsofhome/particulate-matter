@@ -15,6 +15,8 @@ AMBIENT_I2C_SCL_PIN = 22
 AMBIENT_I2C_SDA_PIN = 21
 CONDITIONED_I2C_SCL_PIN = 19
 CONDITIONED_I2C_SDA_PIN = 18
+SPS30_I2C_SCL_PIN = 27
+SPS30_I2C_SDA_PIN = 26
 THERMISTOR_PIN = 34
 PLANTOWER_UART_ID = 2
 PLANTOWER_TX_PIN = 17
@@ -106,6 +108,10 @@ conditioned_i2c = machine.I2C(
     scl=machine.Pin(CONDITIONED_I2C_SCL_PIN),
     sda=machine.Pin(CONDITIONED_I2C_SDA_PIN),
 )
+sps30_i2c = machine.SoftI2C(
+    scl=machine.Pin(SPS30_I2C_SCL_PIN),
+    sda=machine.Pin(SPS30_I2C_SDA_PIN),
+)
 
 ambient_sht = SHT4x(CircuitPythonI2CAdapter(ambient_i2c))
 ambient_sht.mode = Mode.NOHEAT_HIGHPRECISION
@@ -113,7 +119,7 @@ ambient_sht.mode = Mode.NOHEAT_HIGHPRECISION
 conditioned_sht = SHT4x(CircuitPythonI2CAdapter(conditioned_i2c))
 conditioned_sht.mode = Mode.NOHEAT_HIGHPRECISION
 
-sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(ambient_i2c))
+sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(sps30_i2c))
 
 heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
 heater.value(0)
