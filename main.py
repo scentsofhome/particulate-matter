@@ -1,95 +1,247 @@
-import machine as m, dht, time as t, math as o, sys, uselect
+import dht
+import machine
+import sys
+import time
+import uselect
 
-h = m.Pin(25, m.Pin.OUT)
-h.value(0)
-s = dht.DHT22(m.Pin(27))
-a = m.ADC(m.Pin(34))
-a.atten(m.ADC.ATTN_11DB)
-u = m.UART(2, 9600, tx=17, rx=16, timeout=1000)
+from pms5003 import PMS5003
+from thermistor import Thermistor
 
-p = uselect.poll()
-p.register(sys.stdin, uselect.POLLIN)
 
-md, hon, t_st, t_cd, lk, lr = "MANUAL", False, 0, 0, False, 0
-l1, l25, l10, ltc = 0, 0, 0, 0.0
-# Initialize raw count variables
-r03, r05, r10, r25, r50, r100 = 0, 0, 0, 0, 0, 0
+# Pins and sensor settings
+HEATER_PIN = 25
+DHT_PIN = 27
+THERMISTOR_PIN = 34
+PMS_UART_ID = 2
+PMS_TX_PIN = 17
+PMS_RX_PIN = 16
 
-def rd_pm():
-    if u.any() > 128: u.read(u.any()); return None
-    while u.any() >= 32:
-        if u.read(1) == b'\x42' and u.read(1) == b'\x4D':
-            b = u.read(30)
-            if len(b) == 30: 
-                # PM values (CF=1)
-                p1 = (b[2] << 8) | b[3]
-                p25 = (b[4] << 8) | b[5]
-                p10 = (b[6] << 8) | b[7]
-                # Raw Counts per 0.1L air
-                c03 = (b[14] << 8) | b[15]
-                c05 = (b[16] << 8) | b[17]
-                c10 = (b[18] << 8) | b[19]
-                c25 = (b[20] << 8) | b[21]
-                c50 = (b[22] << 8) | b[23]
-                c100 = (b[24] << 8) | b[25]
-                return p1, p25, p10, c03, c05, c10, c25, c50, c100
-    return None
+DHT_HUMIDITY_TRIGGER = 40
+THERMISTOR_CUTOFF_C = 45.0
+HEATER_ON_MS = 5_000
+HEATER_COOLDOWN_MS = 35_000
+READ_INTERVAL_MS = 2_000
+
+THERMISTOR_BETA = 3950
+THERMISTOR_R0 = 10_000.0
+THERMISTOR_T0_K = 298.15
+THERMISTOR_RESISTOR = 10_000.0
+
+MODE_AUTOMATIC = "AUTOMATIC"
+MODE_MANUAL = "MANUAL"
+
+
+class ADC16Adapter:
+    """Gives ESP32 ADC.read() the read_u16() API used by thermistor.py."""
+
+    def __init__(self, adc):
+        self.adc = adc
+
+    def read_u16(self):
+        if hasattr(self.adc, "read_u16"):
+            return self.adc.read_u16()
+        return int(self.adc.read() * 65535 / 4095)
+
+
+heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
+heater.value(0)
+
+dht_sensor = dht.DHT22(machine.Pin(DHT_PIN))
+
+thermistor_adc = machine.ADC(machine.Pin(THERMISTOR_PIN))
+thermistor_adc.atten(machine.ADC.ATTN_11DB)
+thermistor = Thermistor(
+    ADC16Adapter(thermistor_adc),
+    THERMISTOR_BETA,
+    THERMISTOR_R0,
+    THERMISTOR_T0_K,
+    THERMISTOR_RESISTOR,
+)
+
+pms_uart = machine.UART(
+    PMS_UART_ID,
+    9600,
+    tx=PMS_TX_PIN,
+    rx=PMS_RX_PIN,
+    timeout=1000,
+)
+pms_sensor = PMS5003(pms_uart, pin_reset=None, pin_enable=None, mode="active", retries=3)
+
+stdin_poll = uselect.poll()
+stdin_poll.register(sys.stdin, uselect.POLLIN)
+
+mode = MODE_MANUAL
+heater_is_on = False
+heater_started_at = 0
+cooldown_started_at = 0
+cooldown_active = False
+last_read_at = 0
+
+last_pm = {
+    "pm1": 0,
+    "pm25": 0,
+    "pm10": 0,
+    "raw03": 0,
+    "raw05": 0,
+    "raw10": 0,
+    "raw25": 0,
+    "raw50": 0,
+    "raw100": 0,
+}
+last_thermistor_c = 0.0
+
+
+def set_heater(enabled, now=None):
+    global heater_is_on, heater_started_at
+
+    if enabled and not heater_is_on:
+        heater_started_at = time.ticks_ms() if now is None else now
+
+    heater.value(1 if enabled else 0)
+    heater_is_on = enabled
+
+
+def read_command():
+    if not stdin_poll.poll(10):
+        return None
+    return sys.stdin.readline().strip().lower()
+
+
+def handle_command(command, now):
+    global mode, cooldown_active
+
+    if command == "auto":
+        mode = MODE_AUTOMATIC
+    elif command == "manual":
+        mode = MODE_MANUAL
+        cooldown_active = False
+        set_heater(False)
+    elif command == "high" and mode == MODE_MANUAL:
+        set_heater(True, now)
+    elif command == "low" and mode == MODE_MANUAL:
+        set_heater(False)
+
+
+def update_cooldown(now):
+    global cooldown_active, cooldown_started_at
+
+    if (
+        mode == MODE_AUTOMATIC
+        and heater_is_on
+        and time.ticks_diff(now, heater_started_at) >= HEATER_ON_MS
+    ):
+        set_heater(False)
+        cooldown_active = True
+        cooldown_started_at = now
+
+    if cooldown_active and time.ticks_diff(now, cooldown_started_at) >= HEATER_COOLDOWN_MS:
+        cooldown_active = False
+
+
+def read_dht():
+    try:
+        dht_sensor.measure()
+        return dht_sensor.temperature(), dht_sensor.humidity()
+    except Exception:
+        return "Err", "Err"
+
+
+def read_thermistor_c():
+    global last_thermistor_c
+
+    try:
+        last_thermistor_c = Thermistor.toC(thermistor.temperature())
+    except Exception:
+        pass
+
+    return last_thermistor_c
+
+
+def read_particulate_matter():
+    global last_pm
+
+    try:
+        if not pms_sensor.data_available():
+            return last_pm
+
+        reading = pms_sensor.read()
+        last_pm = {
+            "pm1": reading.pm_ug_per_m3(1.0),
+            "pm25": reading.pm_ug_per_m3(2.5),
+            "pm10": reading.pm_ug_per_m3(10),
+            "raw03": reading.pm_per_1l_air(0.3),
+            "raw05": reading.pm_per_1l_air(0.5),
+            "raw10": reading.pm_per_1l_air(1.0),
+            "raw25": reading.pm_per_1l_air(2.5),
+            "raw50": reading.pm_per_1l_air(5),
+            "raw100": reading.pm_per_1l_air(10),
+        }
+    except Exception:
+        pass
+
+    return last_pm
+
+
+def should_heat(dht_humidity, thermistor_c):
+    if mode == MODE_MANUAL:
+        target = heater_is_on
+    else:
+        target = dht_humidity != "Err" and dht_humidity > DHT_HUMIDITY_TRIGGER
+
+    if thermistor_c >= THERMISTOR_CUTOFF_C:
+        target = False
+    if cooldown_active:
+        target = False
+
+    return target
+
+
+def heater_status():
+    if cooldown_active:
+        return "COOLDOWN"
+    if heater.value() == 1:
+        return "ON"
+    return "OFF"
+
+
+def print_data(dht_temp, dht_humidity, thermistor_c, pm):
+    print(
+        "DATA:{},{},{},{},{},{},{},{},{},{},{},{},{},{}".format(
+            mode,
+            heater_status(),
+            dht_temp,
+            dht_humidity,
+            round(thermistor_c, 1),
+            pm["pm1"],
+            pm["pm25"],
+            pm["pm10"],
+            pm["raw03"],
+            pm["raw05"],
+            pm["raw10"],
+            pm["raw25"],
+            pm["raw50"],
+            pm["raw100"],
+        )
+    )
+
 
 while True:
-    n = t.ticks_ms()
-    if p.poll(10):
-        c = sys.stdin.readline().strip().lower()
-        if c == "auto": md = "AUTOMATIC"
-        elif c == "manual": md = "MANUAL"; h.value(0); hon = False; lk = False
-        elif c == "high" and md == "MANUAL": h.value(1); t_st = n; hon = True
-        elif c == "low" and md == "MANUAL": h.value(0); hon = False
+    now = time.ticks_ms()
 
-    # 35-Second Cooldown Logic
-    if md == "AUTOMATIC" and hon and t.ticks_diff(n, t_st) >= 5000:
-        h.value(0); hon = False; lk = True; t_cd = n
-    if lk and t.ticks_diff(n, t_cd) >= 35000:
-        lk = False
+    command = read_command()
+    if command:
+        handle_command(command, now)
 
-    if t.ticks_diff(n, lr) >= 2000:
-        lr = n
-        
-        dht_t, dht_h = "Err", "Err"
-        try:
-            s.measure()
-            dht_t = f"{s.temperature()}"
-            dht_h = f"{s.humidity()}"
-        except: pass
-        
-        try:
-            r = a.read()
-            if 50 < r < 4045:
-                res = 10000.0 * (r / (4095.0 - r))
-                ltc = (1.0 / (o.log(res / 10000.0) / 3950 + (1.0 / 298.15))) - 273.15
-        except: pass
-        
-        pm = rd_pm()
-        if pm: 
-            l1, l25, l10, r03, r05, r10, r25, r50, r100 = pm
+    update_cooldown(now)
 
-        tgt = hon
-        if md == "AUTOMATIC": tgt = True if (dht_h != "Err" and s.humidity() > 40) else False
-        
-        # 45C Cutoff
-        if ltc >= 45.0: tgt = False
-        if lk: tgt = False
+    if time.ticks_diff(now, last_read_at) >= READ_INTERVAL_MS:
+        last_read_at = now
 
-        if tgt:
-            if not hon: t_st = n; hon = True
-            h.value(1)
-        else:
-            h.value(0); hon = False
+        dht_temp, dht_humidity = read_dht()
+        thermistor_c = read_thermistor_c()
+        pm = read_particulate_matter()
 
-        if lk: h_stat = "COOLDOWN"
-        elif h.value() == 1: h_stat = "ON"
-        else: h_stat = "OFF"
+        set_heater(should_heat(dht_humidity, thermistor_c), now)
+        print_data(dht_temp, dht_humidity, thermistor_c, pm)
 
-        # --- SEND EXTENDED DATA TO WEB APP ---
-        # Format: DATA:Mode,Heater,DHT_Temp,DHT_Hum,Therm_Temp,PM1,PM25,PM10,Raw0.3,Raw0.5,Raw1.0,Raw2.5,Raw5.0,Raw10.0
-        print(f"DATA:{md},{h_stat},{dht_t},{dht_h},{round(ltc, 1)},{l1},{l25},{l10},{r03},{r05},{r10},{r25},{r50},{r100}")
-
-    t.sleep(0.1)
+    time.sleep(0.1)
