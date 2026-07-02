@@ -113,13 +113,31 @@ sps30_i2c = machine.SoftI2C(
     sda=machine.Pin(SPS30_I2C_SDA_PIN),
 )
 
-ambient_sht = SHT4x(CircuitPythonI2CAdapter(ambient_i2c))
-ambient_sht.mode = Mode.NOHEAT_HIGHPRECISION
 
-conditioned_sht = SHT4x(CircuitPythonI2CAdapter(conditioned_i2c))
-conditioned_sht.mode = Mode.NOHEAT_HIGHPRECISION
+def init_sht41(i2c, name):
+    try:
+        sensor = SHT4x(CircuitPythonI2CAdapter(i2c))
+        sensor.mode = Mode.NOHEAT_HIGHPRECISION
+        print("{} SHT41 ready".format(name))
+        return sensor
+    except Exception as error:
+        print("{} SHT41 unavailable: {}".format(name, error))
+        return None
 
-sps30_sensor = SPS30_I2C(CircuitPythonI2CAdapter(sps30_i2c))
+
+def init_sps30(i2c):
+    try:
+        sensor = SPS30_I2C(CircuitPythonI2CAdapter(i2c))
+        print("SPS30 ready")
+        return sensor
+    except Exception as error:
+        print("SPS30 unavailable: {}".format(error))
+        return None
+
+
+ambient_sht = init_sht41(ambient_i2c, "Ambient")
+conditioned_sht = init_sht41(conditioned_i2c, "Conditioned")
+sps30_sensor = init_sps30(sps30_i2c)
 
 heater = machine.Pin(HEATER_PIN, machine.Pin.OUT)
 heater.value(0)
@@ -222,6 +240,9 @@ def update_cooldown(now):
 
 
 def read_sht41(sensor):
+    if sensor is None:
+        return "Err", "Err"
+
     try:
         return sensor.measurements
     except Exception:
@@ -241,6 +262,9 @@ def read_thermistor_c():
 
 def read_sensirion_pm():
     global last_sensirion_pm
+
+    if sps30_sensor is None:
+        return last_sensirion_pm
 
     try:
         if not sps30_sensor.data_available:
