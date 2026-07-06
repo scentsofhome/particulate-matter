@@ -27,9 +27,9 @@ READ_INTERVAL_MS = 2000
 
 # Thermistor settings and parameters. 
 THERMISTOR_BETA = 3950
-THERMISTOR_R0 = 10_000.0
+THERMISTOR_R0 = 10000.0
 THERMISTOR_T0_K = 298.15
-THERMISTOR_RESISTOR = 10_000.0
+THERMISTOR_RESISTOR = 10000.0
 
 MODE_AUTOMATIC = "AUTOMATIC"
 MODE_MANUAL = "MANUAL"
@@ -64,7 +64,10 @@ def set_heater(enabled, now=None):
     global heater_started_at
 
     if enabled and not device.heater_is_on():
-        heater_started_at = time.ticks_ms() if now is None else now
+        if now is None:
+            heater_started_at = time.ticks_ms()
+        else:
+            heater_started_at = now
 
     device.set_heater(enabled)
 
