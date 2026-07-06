@@ -1,4 +1,4 @@
-"""AI-assisted DATA line formatting helper."""
+# Note: This file was developed with the assistance of AI code generation tools.
 
 
 def print_data(mode, heater_status, readings):
