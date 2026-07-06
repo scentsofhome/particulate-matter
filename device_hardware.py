@@ -1,4 +1,4 @@
-"""AI-assisted hardware setup and sensor reading helpers."""
+# Note: This file was developed with the assistance of AI code generation tools.
 
 import machine
 
