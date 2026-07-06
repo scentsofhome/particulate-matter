@@ -1,7 +1,4 @@
-"""AI-assisted compatibility helpers for MicroPython sensor libraries.
-
-These adapters keep hardware-library translation code out of main.py.
-"""
+# Note: This file was developed with the assistance of AI code generation tools.
 
 from adafruit_sps30.i2c import SPS30_I2C
 
