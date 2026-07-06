@@ -1,4 +1,4 @@
-"""AI-assisted command input helper."""
+# Note: This file was developed with the assistance of AI code generation tools.
 
 import sys
 import uselect
