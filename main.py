@@ -5,7 +5,7 @@ from data_output import print_data
 from device_hardware import DeviceHardware
 
 
-# Hardware pins
+# Hardware pin configuration. 
 HEATER_PIN = 25
 AMBIENT_I2C_SCL_PIN = 22
 AMBIENT_I2C_SDA_PIN = 21
@@ -18,14 +18,14 @@ PLANTOWER_UART_ID = 2
 PLANTOWER_TX_PIN = 17
 PLANTOWER_RX_PIN = 16
 
-# Experiment settings
+# Experiment settings.
 CONDITIONED_HUMIDITY_TRIGGER = 40
 THERMISTOR_CUTOFF_C = 60.0
-HEATER_ON_MS = 15_000
-HEATER_COOLDOWN_MS = 30_000
-READ_INTERVAL_MS = 2_000
+HEATER_ON_MS = 15000
+HEATER_COOLDOWN_MS = 30000
+READ_INTERVAL_MS = 2000
 
-# Thermistor settings
+# Thermistor settings and parameters. 
 THERMISTOR_BETA = 3950
 THERMISTOR_R0 = 10_000.0
 THERMISTOR_T0_K = 298.15
