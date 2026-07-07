@@ -9,8 +9,9 @@ must also be included in the same directory. The file main.py contains only the 
 """
 
 from command_input import read_command
-from data_output import print_data
+from data_output import CSV_HEADER, print_data
 from device_hardware import DeviceHardware
+from sd_logger import SDCardLogger
 
 
 # Hardware pin configuration. 
@@ -25,6 +26,10 @@ THERMISTOR_PIN = 34
 PLANTOWER_UART_ID = 2
 PLANTOWER_TX_PIN = 17
 PLANTOWER_RX_PIN = 16
+SD_SCK_PIN = 14
+SD_MISO_PIN = 32
+SD_MOSI_PIN = 23
+SD_CS_PIN = 33
 
 # Experiment settings.
 CONDITIONED_HUMIDITY_TRIGGER = 40
@@ -49,6 +54,14 @@ device = DeviceHardware(heater_pin=HEATER_PIN, ambient_i2c_scl_pin=AMBIENT_I2C_S
     sps30_i2c_sda_pin=SPS30_I2C_SDA_PIN, thermistor_pin=THERMISTOR_PIN, plantower_uart_id=PLANTOWER_UART_ID, plantower_tx_pin=PLANTOWER_TX_PIN,
     plantower_rx_pin=PLANTOWER_RX_PIN, thermistor_beta=THERMISTOR_BETA, thermistor_r0=THERMISTOR_R0, thermistor_t0_k=THERMISTOR_T0_K,
     thermistor_resistor=THERMISTOR_RESISTOR)
+
+sd_logger = SDCardLogger(
+    sck_pin=SD_SCK_PIN,
+    miso_pin=SD_MISO_PIN,
+    mosi_pin=SD_MOSI_PIN,
+    cs_pin=SD_CS_PIN,
+    header=CSV_HEADER,
+)
 
 # Global variables. 
 mode = MODE_MANUAL
@@ -139,6 +152,7 @@ while True:
 
         readings = device.read_all()
         set_heater(should_heat(readings), now)
-        print_data(mode, heater_status(), readings)
+        data_row = print_data(mode, heater_status(), readings)
+        sd_logger.log(now, data_row)
 
     time.sleep(0.1)
