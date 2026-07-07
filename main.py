@@ -1,5 +1,13 @@
 import time
 
+"""
+
+The files command_input.py, data_output.py, and device_hardware.py are helper files that must be located in the same directory as main.py.
+These files integrate sensor libraries and drivers (adafruit_bus_device, adafruit_sps30, compatibility_adapters.py, pms5003.py, thermistor.py) which
+must also be included in the same directory. The file main.py contains only the runtime loop and the physical hardware configuration. 
+
+"""
+
 from command_input import read_command
 from data_output import print_data
 from device_hardware import DeviceHardware
@@ -28,38 +36,28 @@ READ_INTERVAL_MS = 2000
 # Thermistor settings and parameters. 
 THERMISTOR_BETA = 3950
 THERMISTOR_R0 = 10000.0
-THERMISTOR_T0_K = 298.15
+THERMISTOR_T0_K = 293.15 # calibrated at 20 C
 THERMISTOR_RESISTOR = 10000.0
 
+# Heater modes. 
 MODE_AUTOMATIC = "AUTOMATIC"
 MODE_MANUAL = "MANUAL"
 
+# Store all of the hardware configurations in an instance of the DeviceHardware class. 
+device = DeviceHardware(heater_pin=HEATER_PIN, ambient_i2c_scl_pin=AMBIENT_I2C_SCL_PIN, ambient_i2c_sda_pin=AMBIENT_I2C_SDA_PIN, 
+    conditioned_i2c_scl_pin=CONDITIONED_I2C_SCL_PIN, conditioned_i2c_sda_pin=CONDITIONED_I2C_SDA_PIN, sps30_i2c_scl_pin=SPS30_I2C_SCL_PIN,
+    sps30_i2c_sda_pin=SPS30_I2C_SDA_PIN, thermistor_pin=THERMISTOR_PIN, plantower_uart_id=PLANTOWER_UART_ID, plantower_tx_pin=PLANTOWER_TX_PIN,
+    plantower_rx_pin=PLANTOWER_RX_PIN, thermistor_beta=THERMISTOR_BETA, thermistor_r0=THERMISTOR_R0, thermistor_t0_k=THERMISTOR_T0_K,
+    thermistor_resistor=THERMISTOR_RESISTOR)
 
-device = DeviceHardware(
-    heater_pin=HEATER_PIN,
-    ambient_i2c_scl_pin=AMBIENT_I2C_SCL_PIN,
-    ambient_i2c_sda_pin=AMBIENT_I2C_SDA_PIN,
-    conditioned_i2c_scl_pin=CONDITIONED_I2C_SCL_PIN,
-    conditioned_i2c_sda_pin=CONDITIONED_I2C_SDA_PIN,
-    sps30_i2c_scl_pin=SPS30_I2C_SCL_PIN,
-    sps30_i2c_sda_pin=SPS30_I2C_SDA_PIN,
-    thermistor_pin=THERMISTOR_PIN,
-    plantower_uart_id=PLANTOWER_UART_ID,
-    plantower_tx_pin=PLANTOWER_TX_PIN,
-    plantower_rx_pin=PLANTOWER_RX_PIN,
-    thermistor_beta=THERMISTOR_BETA,
-    thermistor_r0=THERMISTOR_R0,
-    thermistor_t0_k=THERMISTOR_T0_K,
-    thermistor_resistor=THERMISTOR_RESISTOR,
-)
-
+# Global variables. 
 mode = MODE_MANUAL
 heater_started_at = 0
 cooldown_started_at = 0
 cooldown_active = False
 last_read_at = 0
 
-
+# Turns the heater on and off and handles timing. 
 def set_heater(enabled, now=None):
     global heater_started_at
 
@@ -71,7 +69,7 @@ def set_heater(enabled, now=None):
 
     device.set_heater(enabled)
 
-
+# Handles manual and automatic modes. 
 def handle_command(command, now):
     global mode, cooldown_active
 
@@ -86,28 +84,23 @@ def handle_command(command, now):
     elif command == "low" and mode == MODE_MANUAL:
         set_heater(False)
 
-
+# Cooldown timing for automatic mode. 
 def update_cooldown(now):
     global cooldown_active, cooldown_started_at
 
-    heater_has_run_long_enough = (
-        mode == MODE_AUTOMATIC
-        and device.heater_is_on()
-        and time.ticks_diff(now, heater_started_at) >= HEATER_ON_MS
-    )
+    heater_has_run_long_enough = (mode == MODE_AUTOMATIC and device.heater_is_on() and time.ticks_diff(now, heater_started_at) >= HEATER_ON_MS)
+    
     if heater_has_run_long_enough:
         set_heater(False)
         cooldown_active = True
         cooldown_started_at = now
 
-    cooldown_has_finished = (
-        cooldown_active
-        and time.ticks_diff(now, cooldown_started_at) >= HEATER_COOLDOWN_MS
-    )
+    cooldown_has_finished = (cooldown_active and time.ticks_diff(now, cooldown_started_at) >= HEATER_COOLDOWN_MS)
+    
     if cooldown_has_finished:
         cooldown_active = False
 
-
+# Heating conditions for automatic mode, returns a boolean. 
 def should_heat(readings):
     if mode == MODE_MANUAL:
         target = device.heater_is_on()
@@ -130,7 +123,7 @@ def heater_status():
         return "ON"
     return "OFF"
 
-
+# Main runtime loop. 
 while True:
     now = time.ticks_ms()
 
