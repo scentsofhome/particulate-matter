@@ -1,5 +1,7 @@
 # Note: This file was developed with the assistance of AI code generation tools.
 
+"""AI-assisted hardware setup and sensor reading helpers."""
+
 import machine
 
 from adafruit_sht4x import Mode, SHT4x
@@ -12,16 +14,32 @@ from pms5003 import PMS5003
 from thermistor import Thermistor
 
 
-EMPTY_PM = {
+EMPTY_SPS30_PM = {
     "pm1": 0,
     "pm25": 0,
+    "pm4": 0,
     "pm10": 0,
-    "raw03": 0,
-    "raw05": 0,
-    "raw10": 0,
-    "raw25": 0,
-    "raw50": 0,
-    "raw100": 0,
+    "count05": 0,
+    "count10": 0,
+    "count25": 0,
+    "count40": 0,
+    "count100": 0,
+    "typical_particle_size": 0,
+}
+
+EMPTY_PLANTOWER_PM = {
+    "pm1_standard": 0,
+    "pm25_standard": 0,
+    "pm10_standard": 0,
+    "pm1_env": 0,
+    "pm25_env": 0,
+    "pm10_env": 0,
+    "count03": 0,
+    "count05": 0,
+    "count10": 0,
+    "count25": 0,
+    "count50": 0,
+    "count100": 0,
 }
 
 
@@ -93,8 +111,8 @@ class DeviceHardware:
             thermistor_resistor,
         )
 
-        self.last_sensirion_pm = dict(EMPTY_PM)
-        self.last_plantower_pm = dict(EMPTY_PM)
+        self.last_sensirion_pm = dict(EMPTY_SPS30_PM)
+        self.last_plantower_pm = dict(EMPTY_PLANTOWER_PM)
         self.last_thermistor_c = 0.0
         self.sps30_error_count = 0
 
@@ -164,13 +182,14 @@ class DeviceHardware:
             self.last_sensirion_pm = {
                 "pm1": reading["pm10 standard"],
                 "pm25": reading["pm25 standard"],
+                "pm4": reading["pm40 standard"],
                 "pm10": reading["pm100 standard"],
-                "raw03": 0,
-                "raw05": reading["particles 05um"],
-                "raw10": reading["particles 10um"],
-                "raw25": reading["particles 25um"],
-                "raw50": reading["particles 40um"],
-                "raw100": reading["particles 100um"],
+                "count05": reading["particles 05um"],
+                "count10": reading["particles 10um"],
+                "count25": reading["particles 25um"],
+                "count40": reading["particles 40um"],
+                "count100": reading["particles 100um"],
+                "typical_particle_size": reading["tps"],
             }
         except Exception as error:
             self.sps30_error_count += 1
@@ -186,15 +205,18 @@ class DeviceHardware:
 
             reading = self.plantower_sensor.read()
             self.last_plantower_pm = {
-                "pm1": reading.pm_ug_per_m3(1.0),
-                "pm25": reading.pm_ug_per_m3(2.5),
-                "pm10": reading.pm_ug_per_m3(10),
-                "raw03": reading.pm_per_1l_air(0.3),
-                "raw05": reading.pm_per_1l_air(0.5),
-                "raw10": reading.pm_per_1l_air(1.0),
-                "raw25": reading.pm_per_1l_air(2.5),
-                "raw50": reading.pm_per_1l_air(5),
-                "raw100": reading.pm_per_1l_air(10),
+                "pm1_standard": reading.pm_ug_per_m3(1.0),
+                "pm25_standard": reading.pm_ug_per_m3(2.5),
+                "pm10_standard": reading.pm_ug_per_m3(10),
+                "pm1_env": reading.pm_ug_per_m3(1.0, atmospheric_environment=True),
+                "pm25_env": reading.pm_ug_per_m3(2.5, atmospheric_environment=True),
+                "pm10_env": reading.pm_ug_per_m3(10, atmospheric_environment=True),
+                "count03": reading.pm_per_1l_air(0.3),
+                "count05": reading.pm_per_1l_air(0.5),
+                "count10": reading.pm_per_1l_air(1.0),
+                "count25": reading.pm_per_1l_air(2.5),
+                "count50": reading.pm_per_1l_air(5),
+                "count100": reading.pm_per_1l_air(10),
             }
         except Exception:
             pass

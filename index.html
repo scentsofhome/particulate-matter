@@ -577,6 +577,7 @@
             margin-bottom: 20px;
         }
 
+        .sensor-grid,
         .plantower-raw {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -695,7 +696,7 @@
             .status-pill, .btn-small, input { width: 100%; }
             input[type="password"] { width: 100%; }
             #val-pm25 { font-size: 3.6rem; }
-            .hero-stats, .plantower-raw { grid-template-columns: 1fr; }
+            .hero-stats, .sensor-grid, .plantower-raw { grid-template-columns: 1fr; }
             .bottom-panel {
                 left: 12px;
                 right: 12px;
@@ -732,16 +733,16 @@
                         <div class="hero-stat-value"><span id="val-pm1">--</span><span class="unit">µg/m³</span></div>
                     </div>
                     <div class="hero-stat">
+                        <div class="hero-stat-label">PM 4.0</div>
+                        <div class="hero-stat-value"><span id="val-pm4">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="hero-stat">
                         <div class="hero-stat-label">PM 10</div>
                         <div class="hero-stat-value"><span id="val-pm10">--</span><span class="unit">µg/m³</span></div>
                     </div>
                     <div class="hero-stat">
-                        <div class="hero-stat-label">SPS30 > 0.5 µm</div>
-                        <div class="hero-stat-value"><span id="val-r03">--</span><span class="unit">#/cm³</span></div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-label">SPS30 > 1.0 µm</div>
-                        <div class="hero-stat-value"><span id="val-r05">--</span><span class="unit">#/cm³</span></div>
+                        <div class="hero-stat-label">Typical Size</div>
+                        <div class="hero-stat-value"><span id="val-sps-tps">--</span><span class="unit">µm</span></div>
                     </div>
                 </div>
             </div>
@@ -811,26 +812,96 @@
 
         <section class="particle-grid">
             <div class="panel metric-panel">
-                <div class="eyebrow">Plantower PMS5003</div>
+                <div class="eyebrow">Sensirion SPS30 Mass</div>
                 <div class="metric-list">
                     <div class="metric-row">
                         <div class="metric-label">PM 1.0</div>
-                        <div class="metric-value"><span id="val-pt-pm1">--</span><span class="unit">µg/m³</span></div>
+                        <div class="metric-value"><span id="val-sps-pm1">--</span><span class="unit">µg/m³</span></div>
                     </div>
                     <div class="metric-row">
                         <div class="metric-label">PM 2.5</div>
-                        <div class="metric-value"><span id="val-pt-pm25">--</span><span class="unit">µg/m³</span></div>
+                        <div class="metric-value"><span id="val-sps-pm25">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 4.0</div>
+                        <div class="metric-value"><span id="val-sps-pm4">--</span><span class="unit">µg/m³</span></div>
                     </div>
                     <div class="metric-row">
                         <div class="metric-label">PM 10</div>
-                        <div class="metric-value"><span id="val-pt-pm10">--</span><span class="unit">µg/m³</span></div>
+                        <div class="metric-value"><span id="val-sps-pm10">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Typical Particle Size</div>
+                        <div class="metric-value"><span id="val-sps-tps-detail">--</span><span class="unit">µm</span></div>
                     </div>
                 </div>
             </div>
 
             <div class="panel metric-panel">
-                <div class="eyebrow">Plantower Raw Counts</div>
-                <div class="plantower-raw">
+                <div class="eyebrow">Sensirion SPS30 Counts</div>
+                <div class="sensor-grid">
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 0.5 µm</div>
+                        <div class="raw-value"><span id="val-sps-c05">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 1.0 µm</div>
+                        <div class="raw-value"><span id="val-sps-c10">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 2.5 µm</div>
+                        <div class="raw-value"><span id="val-sps-c25">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 4.0 µm</div>
+                        <div class="raw-value"><span id="val-sps-c40">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                    <div class="raw-cell">
+                        <div class="raw-label">&gt; 10 µm</div>
+                        <div class="raw-value"><span id="val-sps-c100">--</span><span class="unit">#/cm³</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Plantower PMS5003 Standard</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">PM 1.0</div>
+                        <div class="metric-value"><span id="val-pt-pm1-std">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 2.5</div>
+                        <div class="metric-value"><span id="val-pt-pm25-std">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 10</div>
+                        <div class="metric-value"><span id="val-pt-pm10-std">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Plantower PMS5003 Atmospheric</div>
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <div class="metric-label">PM 1.0</div>
+                        <div class="metric-value"><span id="val-pt-pm1-env">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 2.5</div>
+                        <div class="metric-value"><span id="val-pt-pm25-env">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">PM 10</div>
+                        <div class="metric-value"><span id="val-pt-pm10-env">--</span><span class="unit">µg/m³</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metric-panel">
+                <div class="eyebrow">Plantower PMS5003 Counts</div>
+                <div class="sensor-grid">
                     <div class="raw-cell">
                         <div class="raw-label">&gt; 0.3 µm</div>
                         <div class="raw-value"><span id="val-pt-r03">--</span><span class="unit">cnt/0.1L</span></div>
@@ -881,21 +952,61 @@
 
     <script>
         const datasetsConfig = [
-            { label: 'Thermistor', borderColor: '#d7a115', hidden: false },
-            { label: 'Conditioned Temp', borderColor: '#dd5f42', hidden: true },
-            { label: 'Conditioned Humidity', borderColor: '#3f88c5', hidden: false },
-            { label: 'PM 1.0', borderColor: '#4d9f72', hidden: true },
-            { label: 'PM 2.5', borderColor: '#2a9d8f', hidden: false },
-            { label: 'PM 10', borderColor: '#317f64', hidden: true },
-            { label: 'SPS30 >0.5µm', borderColor: '#8f6cba', hidden: false },
-            { label: 'SPS30 >1.0µm', borderColor: '#6572c8', hidden: true }
+            { label: 'Thermistor', field: 'Thermistor_C', borderColor: '#d7a115', hidden: false },
+            { label: 'Conditioned Temp', field: 'Conditioned_Temp_C', borderColor: '#dd5f42', hidden: true },
+            { label: 'Conditioned Humidity', field: 'Conditioned_Humidity_Pct', borderColor: '#3f88c5', hidden: false },
+            { label: 'SPS30 PM 1.0', field: 'SPS30_PM1.0_ug_m3', borderColor: '#4d9f72', hidden: true },
+            { label: 'SPS30 PM 2.5', field: 'SPS30_PM2.5_ug_m3', borderColor: '#2a9d8f', hidden: false },
+            { label: 'SPS30 PM 4.0', field: 'SPS30_PM4.0_ug_m3', borderColor: '#8db24e', hidden: true },
+            { label: 'SPS30 PM 10', field: 'SPS30_PM10_ug_m3', borderColor: '#317f64', hidden: true },
+            { label: 'SPS30 >0.5µm', field: 'SPS30_Count0.5_per_cm3', borderColor: '#8f6cba', hidden: false },
+            { label: 'SPS30 >1.0µm', field: 'SPS30_Count1.0_per_cm3', borderColor: '#6572c8', hidden: true },
+            { label: 'PMS5003 PM 2.5', field: 'PMS5003_PM2.5_Standard_ug_m3', borderColor: '#c17458', hidden: true }
         ];
+
+        const telemetryFields = [
+            "Mode",
+            "Heater",
+            "Ambient_Temp_C",
+            "Ambient_Humidity_Pct",
+            "Conditioned_Temp_C",
+            "Conditioned_Humidity_Pct",
+            "Thermistor_C",
+            "SPS30_PM1.0_ug_m3",
+            "SPS30_PM2.5_ug_m3",
+            "SPS30_PM4.0_ug_m3",
+            "SPS30_PM10_ug_m3",
+            "SPS30_Count0.5_per_cm3",
+            "SPS30_Count1.0_per_cm3",
+            "SPS30_Count2.5_per_cm3",
+            "SPS30_Count4.0_per_cm3",
+            "SPS30_Count10_per_cm3",
+            "SPS30_Typical_Particle_Size_um",
+            "PMS5003_PM1.0_Standard_ug_m3",
+            "PMS5003_PM2.5_Standard_ug_m3",
+            "PMS5003_PM10_Standard_ug_m3",
+            "PMS5003_PM1.0_Atmospheric_ug_m3",
+            "PMS5003_PM2.5_Atmospheric_ug_m3",
+            "PMS5003_PM10_Atmospheric_ug_m3",
+            "PMS5003_Count0.3_per_0.1L",
+            "PMS5003_Count0.5_per_0.1L",
+            "PMS5003_Count1.0_per_0.1L",
+            "PMS5003_Count2.5_per_0.1L",
+            "PMS5003_Count5.0_per_0.1L",
+            "PMS5003_Count10_per_0.1L"
+        ];
+
+        const fieldIndex = telemetryFields.reduce((lookup, field, index) => {
+            lookup[field] = index;
+            return lookup;
+        }, {});
 
         const telemetryChart = {
             data: {
                 labels: [],
                 datasets: datasetsConfig.map(ds => ({
                     label: ds.label,
+                    field: ds.field,
                     borderColor: ds.borderColor,
                     data: [],
                     hidden: ds.hidden
@@ -997,7 +1108,7 @@
                 const points = chartPoints(ds, xFor, yFor);
                 if (!points.length) return;
 
-                if (ds.label === 'PM 2.5') {
+                if (ds.field === 'SPS30_PM2.5_ug_m3') {
                     const fill = chartCtx.createLinearGradient(0, padding.top, 0, padding.top + plotH);
                     fill.addColorStop(0, colorWithAlpha(ds.borderColor, 0.18));
                     fill.addColorStop(0.55, colorWithAlpha(ds.borderColor, 0.06));
@@ -1013,7 +1124,7 @@
                 }
 
                 chartCtx.strokeStyle = ds.borderColor;
-                chartCtx.lineWidth = ds.label === 'PM 2.5' ? 3 : 2.35;
+                chartCtx.lineWidth = ds.field === 'SPS30_PM2.5_ug_m3' ? 3 : 2.35;
                 chartCtx.lineCap = 'round';
                 chartCtx.lineJoin = 'round';
                 chartCtx.beginPath();
@@ -1116,14 +1227,21 @@
         let buffer = "";
         let authenticated = false;
         let passwordSent = false;
-        let sessionData = [["Timestamp", "Mode", "Heater", "Ambient_Temp", "Ambient_Hum", "Conditioned_Temp", "Conditioned_Hum", "Thermistor", "SPS30_PM1.0", "SPS30_PM2.5", "SPS30_PM10", "SPS30_Count0.3_Unused", "SPS30_Count0.5", "SPS30_Count1.0", "SPS30_Count2.5", "SPS30_Count4.0", "SPS30_Count10", "Plantower_PM1.0", "Plantower_PM2.5", "Plantower_PM10", "Plantower_Raw0.3", "Plantower_Raw0.5", "Plantower_Raw1.0", "Plantower_Raw2.5", "Plantower_Raw5.0", "Plantower_Raw10"]];
+        let sessionData = [["Timestamp", ...telemetryFields]];
+
+        function csvCell(value) {
+            const text = String(value ?? "");
+            if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+            return text;
+        }
 
         function exportCSV() {
             if (sessionData.length <= 1) {
                 alert("No data to export.");
                 return;
             }
-            const blob = new Blob([sessionData.map(row => row.join(",")).join("\n")], { type: 'text/csv;charset=utf-8;' });
+            const csv = sessionData.map(row => row.map(csvCell).join(",")).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = `intake_telemetry_${new Date().getTime()}.csv`;
@@ -1249,48 +1367,59 @@
 
         function parseData(dataStr) {
             const parts = dataStr.split(",");
-            if (parts.length < 25) return;
+            if (parts.length < telemetryFields.length) return;
+            const values = parts.slice(0, telemetryFields.length);
+            const get = field => values[fieldIndex[field]];
 
             const now = new Date();
             const timeString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-            sessionData.push([timeString, ...parts]);
+            sessionData.push([timeString, ...values]);
 
-            setMode(parts[0] === "AUTOMATIC" ? 'auto' : 'manual', false);
-            setHeater(parts[1] === "ON" ? 'high' : 'low', false);
+            setMode(get("Mode") === "AUTOMATIC" ? 'auto' : 'manual', false);
+            setHeater(get("Heater") === "ON" ? 'high' : 'low', false);
 
-            setFormattedValue('val-ambt', parts[2], 1);
-            setFormattedValue('val-ambh', parts[3], 1);
-            setFormattedValue('val-dhtt', parts[4], 1);
-            setFormattedValue('val-dhth', parts[5], 1);
-            setFormattedValue('val-wall', parts[6], 1);
+            setFormattedValue('val-ambt', get("Ambient_Temp_C"), 1);
+            setFormattedValue('val-ambh', get("Ambient_Humidity_Pct"), 1);
+            setFormattedValue('val-dhtt', get("Conditioned_Temp_C"), 1);
+            setFormattedValue('val-dhth', get("Conditioned_Humidity_Pct"), 1);
+            setFormattedValue('val-wall', get("Thermistor_C"), 1);
 
-            const pm25Val = parseNumber(parts[8]);
-            setFormattedValue('val-pm1', parts[7], 2);
-            setFormattedValue('val-pm25', parts[8], 2);
-            setFormattedValue('val-pm10', parts[9], 2);
-            setFormattedValue('val-r03', parts[11], 1);
-            setFormattedValue('val-r05', parts[12], 1);
-            setFormattedValue('val-pt-pm1', parts[16], 0);
-            setFormattedValue('val-pt-pm25', parts[17], 0);
-            setFormattedValue('val-pt-pm10', parts[18], 0);
-            setFormattedCount('val-pt-r03', parts[19]);
-            setFormattedCount('val-pt-r05', parts[20]);
-            setFormattedCount('val-pt-r10', parts[21]);
-            setFormattedCount('val-pt-r25', parts[22]);
-            setFormattedCount('val-pt-r50', parts[23]);
-            setFormattedCount('val-pt-r100', parts[24]);
+            const pm25Val = parseNumber(get("SPS30_PM2.5_ug_m3"));
+            setFormattedValue('val-pm1', get("SPS30_PM1.0_ug_m3"), 2);
+            setFormattedValue('val-pm25', get("SPS30_PM2.5_ug_m3"), 2);
+            setFormattedValue('val-pm4', get("SPS30_PM4.0_ug_m3"), 2);
+            setFormattedValue('val-pm10', get("SPS30_PM10_ug_m3"), 2);
+            setFormattedValue('val-sps-tps', get("SPS30_Typical_Particle_Size_um"), 2);
+            setFormattedValue('val-sps-pm1', get("SPS30_PM1.0_ug_m3"), 2);
+            setFormattedValue('val-sps-pm25', get("SPS30_PM2.5_ug_m3"), 2);
+            setFormattedValue('val-sps-pm4', get("SPS30_PM4.0_ug_m3"), 2);
+            setFormattedValue('val-sps-pm10', get("SPS30_PM10_ug_m3"), 2);
+            setFormattedValue('val-sps-tps-detail', get("SPS30_Typical_Particle_Size_um"), 2);
+            setFormattedValue('val-sps-c05', get("SPS30_Count0.5_per_cm3"), 1);
+            setFormattedValue('val-sps-c10', get("SPS30_Count1.0_per_cm3"), 1);
+            setFormattedValue('val-sps-c25', get("SPS30_Count2.5_per_cm3"), 1);
+            setFormattedValue('val-sps-c40', get("SPS30_Count4.0_per_cm3"), 1);
+            setFormattedValue('val-sps-c100', get("SPS30_Count10_per_cm3"), 1);
+
+            setFormattedValue('val-pt-pm1-std', get("PMS5003_PM1.0_Standard_ug_m3"), 0);
+            setFormattedValue('val-pt-pm25-std', get("PMS5003_PM2.5_Standard_ug_m3"), 0);
+            setFormattedValue('val-pt-pm10-std', get("PMS5003_PM10_Standard_ug_m3"), 0);
+            setFormattedValue('val-pt-pm1-env', get("PMS5003_PM1.0_Atmospheric_ug_m3"), 0);
+            setFormattedValue('val-pt-pm25-env', get("PMS5003_PM2.5_Atmospheric_ug_m3"), 0);
+            setFormattedValue('val-pt-pm10-env', get("PMS5003_PM10_Atmospheric_ug_m3"), 0);
+            setFormattedCount('val-pt-r03', get("PMS5003_Count0.3_per_0.1L"));
+            setFormattedCount('val-pt-r05', get("PMS5003_Count0.5_per_0.1L"));
+            setFormattedCount('val-pt-r10', get("PMS5003_Count1.0_per_0.1L"));
+            setFormattedCount('val-pt-r25', get("PMS5003_Count2.5_per_0.1L"));
+            setFormattedCount('val-pt-r50', get("PMS5003_Count5.0_per_0.1L"));
+            setFormattedCount('val-pt-r100', get("PMS5003_Count10_per_0.1L"));
 
             updateAtmosphere(pm25Val);
 
             telemetryChart.data.labels.push(timeString);
-            telemetryChart.data.datasets[0].data.push(parseNumber(parts[6]));
-            telemetryChart.data.datasets[1].data.push(parseNumber(parts[4]));
-            telemetryChart.data.datasets[2].data.push(parseNumber(parts[5]));
-            telemetryChart.data.datasets[3].data.push(parseNumber(parts[7]));
-            telemetryChart.data.datasets[4].data.push(pm25Val);
-            telemetryChart.data.datasets[5].data.push(parseNumber(parts[9]));
-            telemetryChart.data.datasets[6].data.push(parseNumber(parts[11]));
-            telemetryChart.data.datasets[7].data.push(parseNumber(parts[12]));
+            telemetryChart.data.datasets.forEach(dataset => {
+                dataset.data.push(parseNumber(get(dataset.field)));
+            });
 
             if (telemetryChart.data.labels.length > 45) {
                 telemetryChart.data.labels.shift();
