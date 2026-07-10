@@ -520,6 +520,119 @@
         .dropdown-item.active .check { opacity: 1; }
         .dropdown-item .indicator { width: 9px; height: 9px; border-radius: 50%; }
 
+        .sd-panel {
+            margin-bottom: 18px;
+            padding: 18px;
+        }
+
+        .sd-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .sd-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .sd-file-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            min-height: 42px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.42);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.44), rgba(255,255,255,0.20)),
+                rgba(255, 255, 255, 0.28);
+            box-shadow: var(--inner), 0 7px 18px rgba(47, 63, 76, 0.05);
+            cursor: pointer;
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .sd-file-row:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--inner), 0 12px 24px rgba(47, 63, 76, 0.12);
+        }
+
+        .sd-file-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 650;
+            white-space: nowrap;
+        }
+
+        .sd-file-size,
+        .sd-empty {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 620;
+            white-space: nowrap;
+        }
+
+        .sd-viewer {
+            display: none;
+            margin-top: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.42);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.44), rgba(255,255,255,0.20)),
+                rgba(255, 255, 255, 0.28);
+            box-shadow: var(--inner), 0 7px 18px rgba(47, 63, 76, 0.05);
+            overflow: hidden;
+        }
+
+        .sd-viewer.show { display: block; }
+
+        .sd-viewer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.38);
+        }
+
+        .sd-viewer-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sd-download-btn {
+            height: 30px;
+            padding: 0 12px;
+            font-size: 0.82rem;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.26), transparent),
+                var(--system-green);
+            box-shadow: 0 10px 20px rgba(52, 199, 89, 0.20), inset 0 1px 0 rgba(255,255,255,0.30);
+        }
+
+        .sd-file-preview {
+            max-height: 280px;
+            margin: 0;
+            padding: 12px;
+            overflow: auto;
+            color: var(--text);
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            white-space: pre;
+        }
+
         .section-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -683,6 +796,13 @@
             box-shadow: 0 14px 28px rgba(52, 199, 89, 0.24), inset 0 1px 0 rgba(255,255,255,0.30);
         }
 
+        .sd-refresh-btn {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.26), transparent),
+                var(--accent);
+            box-shadow: 0 14px 28px var(--accent-soft), inset 0 1px 0 rgba(255,255,255,0.30);
+        }
+
         @media (max-width: 980px) {
             body { padding: 20px 14px 132px; }
             .connection-strip { justify-content: flex-start; }
@@ -763,6 +883,26 @@
                 <div class="chart-container">
                     <canvas id="telemetryChart"></canvas>
                 </div>
+            </div>
+        </section>
+
+        <section class="panel sd-panel">
+            <div class="sd-header">
+                <div>
+                    <div class="eyebrow">SD Card Files</div>
+                    <div class="panel-subtitle" id="sd-status">Connect, then refresh to list card contents</div>
+                </div>
+                <button class="btn-small sd-refresh-btn" onclick="refreshSdFiles()">Refresh</button>
+            </div>
+            <div class="sd-list" id="sd-file-list">
+                <div class="sd-empty">No files loaded</div>
+            </div>
+            <div class="sd-viewer" id="sd-viewer">
+                <div class="sd-viewer-header">
+                    <div class="sd-viewer-title" id="sd-viewer-title">No file selected</div>
+                    <button class="btn-small sd-download-btn" onclick="downloadOpenSdFile()">Download</button>
+                </div>
+                <pre class="sd-file-preview" id="sd-file-preview"></pre>
             </div>
         </section>
 
@@ -1227,6 +1367,12 @@
         let buffer = "";
         let authenticated = false;
         let passwordSent = false;
+        let passwordTimer = null;
+        let telemetrySeen = false;
+        let sdRefreshTimer = null;
+        let sdReadTimer = null;
+        let openSdFile = null;
+        let pendingSdEntries = null;
         let sessionData = [["Timestamp", ...telemetryFields]];
 
         function csvCell(value) {
@@ -1265,6 +1411,11 @@
                 buffer = "";
                 authenticated = false;
                 passwordSent = false;
+                telemetrySeen = false;
+                if (passwordTimer) clearTimeout(passwordTimer);
+                passwordTimer = setTimeout(() => {
+                    if (!passwordSent) sendWebReplPassword();
+                }, 600);
             };
             ws.onmessage = event => {
                 if (typeof event.data === "string") {
@@ -1284,6 +1435,11 @@
                 ws = null;
                 authenticated = false;
                 passwordSent = false;
+                telemetrySeen = false;
+                if (passwordTimer) {
+                    clearTimeout(passwordTimer);
+                    passwordTimer = null;
+                }
                 setConnectionState('Offline');
                 document.getElementById('connectBtn').innerText = "Connect";
             };
@@ -1293,18 +1449,189 @@
         });
 
         function sendCommand(command) {
-            if (ws && ws.readyState === WebSocket.OPEN) ws.send(command + "\n");
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send(command + "\r\n");
+        }
+
+        function sendWebReplPassword() {
+            const pass = document.getElementById('webReplPass').value.trim();
+            if (!pass) {
+                if (ws) ws.close();
+                return;
+            }
+            passwordSent = true;
+            authenticated = true;
+            setConnectionState('Connected, waiting for data', true);
+            ws.send(pass + "\r\n");
+        }
+
+        function refreshSdFiles() {
+            if (!ws || ws.readyState !== WebSocket.OPEN || !authenticated) {
+                setSdStatus("Connect to the ESP32 first");
+                return;
+            }
+            setSdStatus("Refreshing...");
+            if (sdRefreshTimer) clearTimeout(sdRefreshTimer);
+            sdRefreshTimer = setTimeout(() => {
+                setSdStatus("No SD file response. Check that the updated main.py is running.");
+            }, 15000);
+            pendingSdEntries = [];
+            sendCommand("sdlist");
+        }
+
+        function setSdStatus(message) {
+            document.getElementById('sd-status').innerText = message;
+        }
+
+        function formatBytes(bytes) {
+            if (!Number.isFinite(bytes)) return "--";
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char]);
+        }
+
+        function renderSdFiles(entries) {
+            if (sdRefreshTimer) {
+                clearTimeout(sdRefreshTimer);
+                sdRefreshTimer = null;
+            }
+            const list = document.getElementById('sd-file-list');
+
+            if (!entries.length) {
+                list.innerHTML = '<div class="sd-empty">Card is mounted, but no files were found</div>';
+                setSdStatus("0 files");
+                return;
+            }
+
+            list.innerHTML = entries.map(entry => `
+                <div class="sd-file-row" role="button" tabindex="0" data-file="${escapeHtml(entry.name)}" data-kind="${escapeHtml(entry.kind)}" onclick="requestSdFile(this.dataset.file, this.dataset.kind)">
+                    <div class="sd-file-name" title="${escapeHtml(entry.name)}">${entry.kind === "dir" ? "Folder: " : ""}${escapeHtml(entry.name)}</div>
+                    <div class="sd-file-size">${entry.kind === "dir" ? "folder" : formatBytes(entry.size)}</div>
+                </div>
+            `).join("");
+            setSdStatus(`${entries.length} item${entries.length === 1 ? "" : "s"} found`);
+        }
+
+        function parseSdEntry(payload) {
+            const parts = payload.split("|");
+            if (parts.length < 3 || !pendingSdEntries) return;
+            pendingSdEntries.push({
+                kind: parts[0],
+                name: parts.slice(1, -1).join("|"),
+                size: parseInt(parts[parts.length - 1], 10)
+            });
+        }
+
+        function finishSdList() {
+            renderSdFiles(pendingSdEntries || []);
+            pendingSdEntries = null;
+        }
+
+        function renderLegacySdFiles(payload) {
+            const entries = payload
+                .split(",")
+                .map(item => item.trim())
+                .filter(Boolean)
+                .map(item => {
+                    const separator = item.lastIndexOf("|");
+                    return {
+                        kind: "file",
+                        name: separator >= 0 ? item.slice(0, separator) : item,
+                        size: separator >= 0 ? parseInt(item.slice(separator + 1), 10) : NaN
+                    };
+                });
+            renderSdFiles(entries);
+        }
+
+        function requestSdFile(filename, kind = "file") {
+            if (kind === "dir") {
+                setSdStatus("Select a file, not a folder");
+                return;
+            }
+            if (!ws || ws.readyState !== WebSocket.OPEN || !authenticated) {
+                setSdStatus("Connect to the ESP32 first");
+                return;
+            }
+
+            openSdFile = { name: filename, lines: [], loaded: false };
+            document.getElementById('sd-viewer').classList.add('show');
+            document.getElementById('sd-viewer-title').innerText = filename;
+            document.getElementById('sd-file-preview').innerText = "Opening...";
+            setSdStatus(`Opening ${filename}`);
+
+            if (sdReadTimer) clearTimeout(sdReadTimer);
+            sdReadTimer = setTimeout(() => {
+                setSdStatus("No file response. Check that the updated main.py is running.");
+            }, 20000);
+
+            sendCommand(`sdread ${filename}`);
+        }
+
+        function beginSdFile(filename) {
+            openSdFile = { name: filename, lines: [], loaded: false };
+            document.getElementById('sd-viewer').classList.add('show');
+            document.getElementById('sd-viewer-title').innerText = filename;
+            document.getElementById('sd-file-preview').innerText = "";
+        }
+
+        function appendSdFileLine(line) {
+            if (!openSdFile) return;
+            openSdFile.lines.push(line);
+        }
+
+        function finishSdFile() {
+            if (sdReadTimer) {
+                clearTimeout(sdReadTimer);
+                sdReadTimer = null;
+            }
+            if (!openSdFile) return;
+
+            openSdFile.loaded = true;
+            const text = openSdFile.lines.join("\n");
+            document.getElementById('sd-file-preview').innerText = text || "(empty file)";
+            setSdStatus(`Opened ${openSdFile.name}`);
+        }
+
+        function failSdFile(message) {
+            if (sdReadTimer) {
+                clearTimeout(sdReadTimer);
+                sdReadTimer = null;
+            }
+            setSdStatus(message);
+            document.getElementById('sd-file-preview').innerText = message;
+        }
+
+        function downloadOpenSdFile() {
+            if (!openSdFile || !openSdFile.loaded) {
+                setSdStatus("Open a file first");
+                return;
+            }
+
+            const blob = new Blob([openSdFile.lines.join("\n")], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = openSdFile.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function processBuffer() {
             if (!passwordSent && buffer.includes("Password:")) {
-                const pass = document.getElementById('webReplPass').value.trim();
-                if (pass) {
-                    passwordSent = true;
-                    ws.send(pass + "\n");
-                } else {
-                    ws.close();
+                if (passwordTimer) {
+                    clearTimeout(passwordTimer);
+                    passwordTimer = null;
                 }
+                sendWebReplPassword();
                 buffer = "";
                 return;
             }
@@ -1319,6 +1646,21 @@
             buffer = lines.pop();
             for (const line of lines) {
                 if (line.includes("DATA:")) parseData(line.substring(line.indexOf("DATA:") + 5).trim());
+                if (line.includes("SD_FILES_BEGIN")) pendingSdEntries = [];
+                if (line.includes("SD_FILE_ENTRY:")) parseSdEntry(line.substring(line.indexOf("SD_FILE_ENTRY:") + 14).trim());
+                if (line.includes("SD_FILES_END")) finishSdList();
+                if (line.includes("SD_FILES:")) renderLegacySdFiles(line.substring(line.indexOf("SD_FILES:") + 9).trim());
+                if (line.includes("SD_FILES_ERROR:")) {
+                    if (sdRefreshTimer) {
+                        clearTimeout(sdRefreshTimer);
+                        sdRefreshTimer = null;
+                    }
+                    setSdStatus(line.substring(line.indexOf("SD_FILES_ERROR:") + 15).trim());
+                }
+                if (line.includes("SD_FILE_BEGIN:")) beginSdFile(line.substring(line.indexOf("SD_FILE_BEGIN:") + 14).trim());
+                if (line.includes("SD_FILE_LINE:")) appendSdFileLine(line.substring(line.indexOf("SD_FILE_LINE:") + 13));
+                if (line.includes("SD_FILE_END:")) finishSdFile();
+                if (line.includes("SD_FILE_ERROR:")) failSdFile(line.substring(line.indexOf("SD_FILE_ERROR:") + 14).trim());
             }
         }
 
@@ -1368,6 +1710,10 @@
         function parseData(dataStr) {
             const parts = dataStr.split(",");
             if (parts.length < telemetryFields.length) return;
+            if (!telemetrySeen) {
+                telemetrySeen = true;
+                setConnectionState('Streaming Live', true);
+            }
             const values = parts.slice(0, telemetryFields.length);
             const get = field => values[fieldIndex[field]];
 
@@ -1433,6 +1779,9 @@
         window.setHeater = setHeater;
         window.toggleLayerMenu = toggleLayerMenu;
         window.exportCSV = exportCSV;
+        window.refreshSdFiles = refreshSdFiles;
+        window.requestSdFile = requestSdFile;
+        window.downloadOpenSdFile = downloadOpenSdFile;
         window.parseData = parseData;
         telemetryChart.update();
     </script>

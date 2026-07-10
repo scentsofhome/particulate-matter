@@ -28,5 +28,12 @@ time.sleep(1)
 print(f"Network '{AP_SSID}' is now broadcasting!")
 print("Board IP Address:", wlan_ap.ifconfig()[0]) # This should be 192.168.4.1
 
-# 4. Start the webREPL.
-webrepl.start()
+# 4. Start the webREPL. If WebREPL is misconfigured, keep booting so main.py runs.
+try:
+    webrepl.start()
+except Exception as error:
+    print("WebREPL unavailable:", repr(error))
+
+print("Boot complete; starting main.py...")
+
+import main

@@ -1,4 +1,5 @@
 import time
+import os
 
 """
 
@@ -86,16 +87,84 @@ def set_heater(enabled, now=None):
 def handle_command(command, now):
     global mode, cooldown_active
 
-    if command == "auto":
+    command_key = command.lower()
+
+    if command_key == "auto":
         mode = MODE_AUTOMATIC
-    elif command == "manual":
+    elif command_key == "manual":
         mode = MODE_MANUAL
         cooldown_active = False
         set_heater(False)
-    elif command == "high" and mode == MODE_MANUAL:
+    elif command_key == "high" and mode == MODE_MANUAL:
         set_heater(True, now)
-    elif command == "low" and mode == MODE_MANUAL:
+    elif command_key == "low" and mode == MODE_MANUAL:
         set_heater(False)
+    elif command_key == "sdlist":
+        print_sd_files()
+    elif command_key.startswith("sdread "):
+        print_sd_file(command[7:].strip())
+
+
+def print_sd_files():
+    if not sd_logger.mounted:
+        print("SD_FILES_ERROR:SD card is not mounted")
+        return
+
+    try:
+        print("SD_FILES_BEGIN")
+        print_sd_tree(sd_logger.mount_path, "")
+        print("SD_FILES_END")
+    except Exception as error:
+        print("SD_FILES_ERROR:{}".format(error))
+
+
+def is_directory(path):
+    try:
+        return (os.stat(path)[0] & 0x4000) != 0
+    except OSError:
+        return False
+
+
+def print_sd_tree(base_path, relative_path, depth=0):
+    if depth > 4:
+        return
+
+    path = base_path if not relative_path else "{}/{}".format(base_path, relative_path)
+    filenames = os.listdir(path)
+    filenames.sort()
+
+    for filename in filenames:
+        if filename.startswith("."):
+            continue
+
+        child_relative = filename if not relative_path else "{}/{}".format(relative_path, filename)
+        child_path = "{}/{}".format(base_path, child_relative)
+        directory = is_directory(child_path)
+        size = 0 if directory else os.stat(child_path)[6]
+        kind = "dir" if directory else "file"
+        print("SD_FILE_ENTRY:{}|{}|{}".format(kind, child_relative, size))
+        if directory:
+            print_sd_tree(base_path, child_relative, depth + 1)
+
+
+def print_sd_file(filename):
+    if not sd_logger.mounted:
+        print("SD_FILE_ERROR:SD card is not mounted")
+        return
+
+    if not filename or filename.startswith("/") or "\\" in filename or ".." in filename:
+        print("SD_FILE_ERROR:Invalid filename")
+        return
+
+    try:
+        path = "{}/{}".format(sd_logger.mount_path, filename)
+        print("SD_FILE_BEGIN:{}".format(filename))
+        with open(path, "r") as sd_file:
+            for line in sd_file:
+                print("SD_FILE_LINE:" + line.rstrip("\r\n"))
+        print("SD_FILE_END:{}".format(filename))
+    except Exception as error:
+        print("SD_FILE_ERROR:{}".format(error))
 
 # Cooldown timing for automatic mode. 
 def update_cooldown(now):

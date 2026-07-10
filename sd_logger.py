@@ -3,8 +3,9 @@
 """SD card CSV logging helper for the particulate matter station."""
 
 import machine
-import errno
 import os
+
+from spi_sdcard import SPISDCard
 
 
 class SDCardLogger:
@@ -19,43 +20,52 @@ class SDCardLogger:
         mount_path="/sd",
         filename_prefix="telemetry",
         spi_slot=2,
-        frequency=10000000,
+        frequency=100000,
     ):
         self.enabled = False
+        self.mounted = False
         self.file_path = None
         self.mount_path = mount_path
         self.header = header
 
+        sd_card = None
         try:
-            try:
-                os.mkdir(mount_path)
-            except OSError:
-                pass
-
-            sd_card = machine.SDCard(
-                slot=spi_slot,
-                sck=sck_pin,
-                miso=miso_pin,
-                mosi=mosi_pin,
-                cs=cs_pin,
-                freq=frequency,
+            spi = machine.SPI(
+                spi_slot,
+                baudrate=frequency,
+                polarity=0,
+                phase=0,
+                sck=machine.Pin(sck_pin),
+                miso=machine.Pin(miso_pin),
+                mosi=machine.Pin(mosi_pin),
             )
+            cs = machine.Pin(cs_pin, machine.Pin.OUT, value=1)
+            sd_card = SPISDCard(spi, cs, baudrate=frequency)
             self._mount(sd_card)
+            self.mounted = True
 
             self.file_path = self._next_file_path(filename_prefix)
             self._append_row(header)
             self.enabled = True
             print("SD card logging to {}".format(self.file_path))
         except Exception as error:
+            if sd_card is not None and hasattr(sd_card, "deinit"):
+                try:
+                    sd_card.deinit()
+                except Exception:
+                    pass
             print("SD card logging unavailable: {}".format(error))
 
     def _mount(self, sd_card):
         try:
+            os.umount(self.mount_path)
+        except OSError:
+            pass
+
+        try:
             os.mount(sd_card, self.mount_path)
-        except OSError as error:
-            code = error.args[0] if error.args else None
-            if code != getattr(errno, "EBUSY", 16):
-                raise
+        except OSError:
+            raise
 
     def _next_file_path(self, filename_prefix):
         existing_files = set(os.listdir(self.mount_path))

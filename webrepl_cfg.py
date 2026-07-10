@@ -1,1 +1,1 @@
-PASS = 'humidity_conditioning'
+PASS = 'tame'
